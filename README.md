@@ -59,7 +59,7 @@ Every stage produces a markdown artifact that lives in your course folder foreve
 
 ## Why a Codex edition
 
-> **2026-04-21 policy note.** On April 21, 2026 (US time), Anthropic revised its consumer-plan terms to end **Claude Code access for the Pro tier** — Claude Code now requires Max or the API. A material share of the students who had been running the original PAIDEIA plugin did so on Pro, and lost access overnight. To keep PAIDEIA usable regardless of which runner a student can afford, we ported the plugin to OpenAI Codex CLI under the same license and same on-disk layout. Both editions are maintained; pick whichever agentic CLI you still have under subscription.
+> **2026-04-21 policy note.** On April 21, 2026 (US time), Anthropic revised its consumer-plan terms to end **Claude Code access for the Pro tier** — Claude Code now requires Max or the API. To keep PAIDEIA runnable under whichever agentic CLI a student has a subscription for, the plugin was ported to OpenAI Codex CLI under the same license and same on-disk layout. Both editions are maintained; pick whichever one you're already paying for.
 
 PAIDEIA was born as a Claude Code plugin. The heavy lifting — parallel vision ingest, strategy grading, pattern extraction from *your* solutions — didn't depend on Claude specifically; it depended on *any* agentic CLI with skills, subagents, plugins, and a workable vision path. OpenAI Codex CLI grew those affordances in 2026 (skills, subagents, MCP, plugins, `AGENTS.md`), so the port was a matter of re-homing the logic onto Codex's primitives, not rewriting the study graph.
 
