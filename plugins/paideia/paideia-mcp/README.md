@@ -4,9 +4,9 @@ Stdio MCP server that powers the PAIDEIA Codex plugin. Owns the four pieces of h
 
 | Tool | Purpose |
 |------|---------|
-| `ingest_pdfs` | Render every `materials/**/*.pdf` to PNGs, resize to ≤1800 px long edge, then either (a) hand page paths back to the skill when `engine=codex-native` (Codex reads them with its bundled vision), or (b) OCR in-process and write LaTeX markdown to `converted/**` when `engine=qwen3-vl` / `tesseract`. |
+| `ingest_pdfs` | Render every `materials/**/*.pdf` to PNGs, resize to ≤1800 px long edge, then either (a) hand page paths back to the skill when `engine=codex-native` (Codex reads them with its bundled vision), or (b) OCR in-process and write LaTeX markdown to `converted/**` when `engine=qwen3-vl` / `tesseract`. Plain `materials/**/*.md` files are copied through with provenance headers. |
 | `grade_pdf` | Same dual behavior for a single hand-written answer PDF: `codex-native` rasterizes + returns page paths; `qwen3-vl` / `tesseract` run OCR in-process and write `answers/converted/<stem>.md` with a confidence tier. |
-| `build_course_index` | Read `converted/**`, extract topic tree / recurring solution patterns (P1..Pk) / HW-density coverage, write `course-index/{summary,patterns,coverage}.md`. |
+| `build_course_index` | Read `converted/**`, write a machine-generated baseline `course-index/{summary,patterns,coverage}.md`, and return the inventory the analyze skill can further refine. |
 | `course_phase` | Artifact-derived phase (setup → diag → drill → mock → cram → cool). Returns `{phase, days_until_exam, top_miss_pattern}`. Replaces the Claude Code statusline's phase logic. |
 
 Why MCP and not inline in skills: the ingest pipeline needs deterministic parallelism (`ProcessPoolExecutor` with bounded workers, resumable per PDF), which is fragile and context-heavy when driven from an agent loop. Pushing it into an MCP tool keeps skills thin (~40–80 lines of orchestration) and makes the whole pipeline `codex exec`-friendly.

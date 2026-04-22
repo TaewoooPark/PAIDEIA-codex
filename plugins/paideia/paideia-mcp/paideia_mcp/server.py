@@ -127,6 +127,14 @@ _ANALYZE_SCHEMA: dict[str, Any] = {
             "type": "string",
             "description": "Free-form hints about weak areas; passed through.",
         },
+        "force": {
+            "type": "boolean",
+            "default": False,
+            "description": (
+                "Regenerate course-index/{summary,patterns,coverage}.md even if "
+                "those files already exist."
+            ),
+        },
         "project_root": _PROJECT_ROOT_PROP,
     },
     "additionalProperties": False,
@@ -166,8 +174,8 @@ async def _list_tools() -> list[Tool]:
         Tool(
             name="build_course_index",
             description=(
-                "Return an inventory of converted/ markdown files for the "
-                "analyze skill to reason over."
+                "Inventory converted/ markdown files and write a draft "
+                "course-index/{summary,patterns,coverage}.md baseline."
             ),
             inputSchema=_ANALYZE_SCHEMA,
         ),

@@ -15,7 +15,7 @@ Optional comma-separated weak-zone hints, e.g. `residues, Laplace transforms`. T
 
 Verify that `converted/` in the CWD contains files. If empty, tell the user to run `$paideia-ingest` first. If `course-index/*.md` already exists, warn "기존 인덱스를 덮어쓸게. 수동 편집한 내용 있으면 백업." and wait for confirmation unless `--force` is passed.
 
-If the ingest inventory is very large, you may call MCP tool `paideia-mcp.build_course_index()` to get a machine-readable file manifest; otherwise scan `converted/` directly.
+If the ingest inventory is very large, call MCP tool `paideia-mcp.build_course_index()` first. It returns a machine-readable manifest and writes a baseline `course-index/{summary,patterns,coverage}.md` draft that you should then refine if the course-specific patterns need a smarter merge.
 
 ## Step 1 — `course-index/summary.md`
 
