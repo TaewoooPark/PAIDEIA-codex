@@ -94,7 +94,7 @@ Wait for all four responses. Do not proceed without them.
 
 ## Step 5 — Scaffold (single Python call)
 
-Call the bundled scaffolder with the collected values. It creates the directory skeleton, writes `.course-meta`, writes `AGENTS.md` from the template, seeds `errors/log.md`, and runs `git init` + `.gitignore` idempotently.
+Call the bundled scaffolder with the collected values. It creates the directory skeleton, writes `.course-meta`, writes `AGENTS.md` from the template, seeds `errors/log.md`, merges PAIDEIA-managed `.gitignore` rules, and runs `git init` if the folder is not already a repository.
 
 ```bash
 python3 "${CODEX_PLUGIN_ROOT}/skills/paideia-init-course/scripts/bootstrap.py" \

@@ -3,7 +3,8 @@
 
 Called by the `$paideia-init-course` skill after the user has answered the
 metadata prompts. Creates the directory skeleton, writes `.course-meta`, writes
-`AGENTS.md` from the template, seeds `errors/log.md`, and runs `git init`.
+`AGENTS.md` from the template, seeds `errors/log.md`, and ensures the folder is
+ready for git-based iteration.
 
 Idempotent: existing files are never overwritten; directories are `mkdir -p`'d.
 """
@@ -56,13 +57,7 @@ GITIGNORE = """.codex/cache/
 .paideia-cache/
 answers/.paideia-cache/
 answers/*.pdf
-answers/converted/*.md
-answers/converted/.tmp-*/
-errors/log.md
-quizzes/*_answers.md
-mock/*_sol.md
-twins/*_sol.md
-chain/*_sol.md
+answers/**/*.pdf
 cheatsheet/final.pdf
 .DS_Store
 *.pyc
@@ -89,6 +84,33 @@ def seed_file(path: Path, content: str) -> None:
         return
     path.write_text(content, encoding="utf-8")
     _log("write", path)
+
+
+def ensure_gitignore(root: Path) -> None:
+    """Create or top up ``.gitignore`` with the PAIDEIA-managed entries."""
+
+    path = root / ".gitignore"
+    wanted = GITIGNORE.splitlines()
+
+    if not path.exists():
+        path.write_text(GITIGNORE, encoding="utf-8")
+        _log("write", path)
+        return
+
+    existing = path.read_text(encoding="utf-8")
+    existing_lines = existing.splitlines()
+    merged = list(existing_lines)
+    changed = False
+    for line in wanted:
+        if line not in existing_lines:
+            merged.append(line)
+            changed = True
+    if not changed:
+        _log("skip", path)
+        return
+    body = "\n".join(merged).rstrip() + "\n"
+    path.write_text(body, encoding="utf-8")
+    _log("merge", path)
 
 
 def write_course_meta(root: Path, args: argparse.Namespace) -> None:
@@ -125,6 +147,7 @@ def write_agents_md(root: Path, args: argparse.Namespace, template: Path) -> Non
 
 
 def git_init(root: Path) -> None:
+    ensure_gitignore(root)
     if (root / ".git").exists():
         _log("skip", root / ".git")
         return
@@ -132,7 +155,6 @@ def git_init(root: Path) -> None:
         print("skip: git not on PATH — leaving uninitialized", file=sys.stderr)
         return
     subprocess.run(["git", "init", "-q"], cwd=root, check=False)
-    seed_file(root / ".gitignore", GITIGNORE)
     _log("init", root / ".git")
 
 
