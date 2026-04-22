@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "paideia-mcp": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "paideia_mcp.server"
+      ],
+      "env": {
+        "PYTHONPATH": "${CODEX_PLUGIN_ROOT}/paideia-mcp"
+      },
+      "startup_timeout_sec": 15,
+      "tool_timeout_sec": 1800,
+      "supports_parallel_tool_calls": true
+    }
+  }
+}

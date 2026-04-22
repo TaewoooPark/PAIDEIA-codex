@@ -1,0 +1,21 @@
+{
+  "name": "paideia",
+  "version": "0.1.0",
+  "description": "Exam-prep workspace for math/physics courses, Codex-native. 14 skills (one per verb) + one bundled stdio MCP server (paideia-mcp) that owns the heavy logic: parallel vision ingest of course PDFs (openai-vision / Qwen3-VL / Tesseract), strategy-grading of hand-written answer PDFs, course-index extraction, and artifact-derived phase detection. Drop lecture/textbook/HW/solution PDFs into materials/, and the plugin builds a per-course knowledge graph — patterns ranked by HW-density exam tier, drills, weakmaps, cheatsheets — all as plain markdown in your course folder.",
+  "author": {
+    "name": "TaewoooPark",
+    "url": "https://github.com/TaewoooPark"
+  },
+  "keywords": [
+    "exam-prep",
+    "math",
+    "physics",
+    "ocr",
+    "openai-vision",
+    "qwen3-vl",
+    "tesseract",
+    "course",
+    "mcp",
+    "codex"
+  ]
+}

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paideia-mcp"
+version = "0.1.0"
+description = "Stdio MCP server that powers the PAIDEIA Codex plugin: parallel vision ingest, three OCR engines, course-index extraction, phase detection."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "TaewoooPark", email = "ptw5446@gmail.com" }]
+license = { text = "MIT" }
+dependencies = [
+    "mcp>=1.2.0",
+    "pdf2image>=1.17.0",
+    "pillow>=10.0.0",
+    "pypdf>=4.0.0",
+    "pytesseract>=0.3.10",
+    "reportlab>=4.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "pytest-asyncio>=0.23.0"]
+
+[project.scripts]
+paideia-mcp = "paideia_mcp.server:main"
+
+[tool.setuptools.packages.find]
+include = ["paideia_mcp*"]

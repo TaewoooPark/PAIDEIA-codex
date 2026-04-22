@@ -1,0 +1,1 @@
+"""paideia-mcp package."""
