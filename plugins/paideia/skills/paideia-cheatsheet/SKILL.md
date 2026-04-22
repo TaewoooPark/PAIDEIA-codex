@@ -52,8 +52,7 @@ You may call MCP tool `paideia-mcp.course_phase()` to surface the current phase 
 3. **Write to** `cheatsheet/final.md`.
 
 4. **If `--pdf` in arguments:** render `cheatsheet/final.pdf`.
-   - Call MCP tool `paideia-mcp.render_cheatsheet_pdf(source='cheatsheet/final.md', out='cheatsheet/final.pdf')` if available.
-   - Fallback: use `reportlab` with 2-column layout, 9pt font, minimal margins.
+   - Use `reportlab` with 2-column layout, 9pt font, minimal margins.
    - Remember: **no Unicode subscripts/superscripts in reportlab** — use `<sub>`/`<super>` XML tags.
    - If `pypandoc` is available as an alternative: `pypandoc.convert_file('final.md', 'pdf', outputfile='final.pdf')`.
 
