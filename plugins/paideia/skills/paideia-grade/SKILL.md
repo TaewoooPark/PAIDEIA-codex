@@ -1,23 +1,23 @@
 ---
 name: paideia-grade
-description: Grade a hand-written, scanned answer PDF. OCR via the engine set in .course-meta (override with --ocr=openai-vision|qwen3-vl|tesseract), then strategy-based grading (pattern / variables / end-form) against the reference solution. Errors append to errors/log.md for weakmap and cheatsheet.
+description: Grade a hand-written, scanned answer PDF. OCR via the engine set in .course-meta (override with --ocr=codex-native|qwen3-vl|tesseract). codex-native rasterizes pages and lets Codex read them via its bundled vision; the others OCR inside the MCP. Strategy-based grading (pattern / variables / end-form) against the reference solution. Errors append to errors/log.md for weakmap and cheatsheet.
 ---
 
 # paideia-grade
 
-Convert a hand-written scan to markdown through `paideia-mcp.grade_pdf`, then grade the user's approach against the reference solution by strategy — not line-by-line algebra. OCR noise in hand-writing makes strict algebraic grading useless, and pattern recognition is the actual exam bottleneck.
+Convert a hand-written scan to markdown, then grade the user's approach against the reference solution by strategy — not line-by-line algebra. OCR noise in hand-writing makes strict algebraic grading useless, and pattern recognition is the actual exam bottleneck.
 
 ## Arguments (free-form)
 
 - Positional: path to answer file (`answers/<stem>.pdf` or an already-cleaned `.md`). If omitted, use the most recently modified file in `answers/` that isn't in `answers/converted/`.
-- `--ocr=<engine>` — override engine for this call (`openai-vision` / `qwen3-vl` / `tesseract`).
+- `--ocr=<engine>` — override engine for this call (`codex-native` / `qwen3-vl` / `tesseract`).
 
 ## Step 1 — Resolve target + engine
 
 1. If `$ARGUMENTS` has a positional path, use it. Else pick `answers/*.pdf` (or `*.md`) with the newest `mtime`.
-2. If target is `.md`, skip Step 2 — treat it as user-cleaned OCR output.
-3. Engine precedence: `--ocr=` flag → `OCR_ENGINE` in `.course-meta` → `openai-vision`.
-4. If engine is `openai-vision`, verify `OPENAI_API_KEY` is set. If unset, stop and ask the user to export it (or re-run with a different engine).
+2. If target is `.md`, skip Step 2 entirely — treat it as user-cleaned OCR output and jump to Step 3.
+3. Engine precedence: `--ocr=` flag → `OCR_ENGINE` in `.course-meta` → `codex-native`.
+4. No API-key check — `codex-native` uses the Codex CLI session's bundled vision (no `OPENAI_API_KEY` needed).
 
 ## Step 2 — Call `paideia-mcp.grade_pdf` (PDF only)
 
@@ -28,24 +28,74 @@ paideia-mcp.grade_pdf(
 )
 ```
 
-The tool renders pages, runs OCR in-process, writes `answers/converted/<stem>.md`, and returns:
+The response shape depends on `mode`:
+
+**`mode: "ocr-complete"`** (`qwen3-vl` / `tesseract`) — the MCP already wrote `answers/converted/<stem>.md`:
 
 ```json
 {
-  "markdown_path": "answers/converted/<stem>.md",
-  "pages":         <int>,
-  "tier":          "high" | "medium" | "low",
-  "engine":        "openai-vision" | "qwen3-vl" | "tesseract" | "tesseract-fallback",
-  "glyph_questions": <int>
+  "mode":            "ocr-complete",
+  "markdown_path":   "answers/converted/<stem>.md",
+  "pages_processed": <int>,
+  "tier":            "medium" | "low",
+  "engine":          "qwen3-vl" | "tesseract",
+  "source":          "answers/<stem>.pdf"
 }
 ```
 
-If `tier == "low"` (tesseract fallback or <100 chars of extracted text), print the **OCR quality escape hatch** below and stop. Do not grade on garbled text.
+**`mode: "rasterize-only"`** (`codex-native`) — the MCP wrote per-page PNGs under `answers/.paideia-cache/<stem>/p01.png` ... and handed the list back:
+
+```json
+{
+  "mode":        "rasterize-only",
+  "engine":      "codex-native",
+  "tier":        "high",
+  "destination": "<abs>/answers/converted/<stem>.md",
+  "page_paths":  ["<abs>/answers/.paideia-cache/<stem>/p01.png", ...],
+  "pages":       <int>,
+  "source":      "answers/<stem>.pdf",
+  "ingested_at": "2026-04-22T..."
+}
+```
+
+### Step 2a — Only for `rasterize-only`: read pages + write markdown
+
+Open each `page_paths[i]` image with Codex's bundled vision and transcribe page-by-page. Hand-written math is the hard case: use this prompt per page (adjust to Korean if the user prefers):
+
+> Transcribe the hand-written answer PDF page into markdown. Use LaTeX for math (`$...$`, `$$...$$`). Preserve problem numbering (e.g., `## Problem 2`, `### (a)`). Where a glyph is unreadable, write `[?]` and keep going — do not guess. Output only the markdown.
+
+Write the combined result to `destination` with this header:
+
+```
+# Vision-OCR transcription
+
+<!-- source: answers/<stem>.pdf -->
+<!-- engine: codex-native -->
+<!-- tier: high -->
+<!-- pages: <N> -->
+<!-- ingested: <ingested_at> -->
+
+## Page 1
+
+<page 1 markdown>
+
+## Page 2
+
+<page 2 markdown>
+
+...
+```
+
+If a page transcription fails, surface the OCR quality escape hatch (below) and stop — don't grade on a partial transcription.
+
+### Step 2b — Tier-gated quality check
+
+If `tier == "low"` (tesseract fallback, or <100 chars of extracted text after your transcription), print the **OCR quality escape hatch** below and stop. Do not grade on garbled text.
 
 ```
 OCR 결과 품질이 낮음 (채점 신뢰도 떨어짐).
 옵션:
-  (a) $paideia-grade --ocr=openai-vision <pdf>   ← OpenAI Vision 재시도
+  (a) $paideia-grade --ocr=codex-native <pdf>   ← Codex 내장 비전으로 재시도 (기본)
   (b) 더 밝게/크게 재스캔 후 다시 $paideia-grade
   (c) 답안을 직접 .md로 타이핑해서 answers/converted/<stem>.md 에 저장 후 다시 $paideia-grade
   (d) 채점 대신 $paideia-blind <problem-id>로 전략만 말로 체크

@@ -1,19 +1,26 @@
 """``ingest_pdfs`` MCP tool.
 
-Renders every ``materials/**/*.pdf`` to PNG at dpi=160, resizes to <=1800 px on
-the long edge, runs the selected OCR engine per page, and writes a clean
-GitHub-flavored markdown file to ``converted/<category>/<stem>.md`` with a
-provenance header.
+Two modes, picked by the requested engine:
 
-Parallelism strategy: one worker process per PDF (bounded by
-``max_workers``); OCR pages sequentially inside the worker. This matches the
-"one agent per PDF, sequential pages" contract from VISION.md.
+* ``codex-native`` (default) — render every ``materials/**/*.pdf`` to PNGs in
+  ``.paideia-cache/pages/<stem>/p01.png`` and return a *pending* manifest. The
+  calling skill then asks Codex CLI to read those page images directly with
+  its bundled vision (no separate API billing for ChatGPT subscribers) and
+  writes the converted markdown itself.
+* ``qwen3-vl`` / ``tesseract`` — render to a scratch directory, OCR in-process
+  via :mod:`paideia_mcp.ocr`, and write ``converted/<category>/<stem>.md`` with
+  a provenance header. This is the original "one worker per PDF, sequential
+  pages" pipeline.
+
+In both modes the heavy ``ProcessPoolExecutor`` fan-out stays inside the MCP
+so skill bodies remain thin.
 """
 
 from __future__ import annotations
 
 import datetime
 import os
+import shutil
 import tempfile
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
@@ -21,17 +28,22 @@ from pathlib import Path
 from PIL import Image
 from pdf2image import convert_from_path
 
+from .ocr import _IN_PROCESS
+
 _CATEGORIES = ("lectures", "textbook", "homework", "solutions")
 _DPI = 160
 _MAX_LONG_EDGE = 1800
 _PAGE_SEPARATOR = "\n\n---\n\n"
+_DEFAULT_ENGINE = "codex-native"
+_CACHE_DIRNAME = ".paideia-cache"
 
 
 def _default_workers(engine: str) -> int:
     """Pick a conservative worker count per engine."""
 
-    if engine == "openai-vision":
-        return 4
+    if engine == "codex-native":
+        # Pure rasterization — CPU/IO bound, parallelizes well.
+        return max(1, (os.cpu_count() or 4) // 2)
     if engine == "qwen3-vl":
         return 1  # GPU-bound locally
     # tesseract
@@ -104,11 +116,12 @@ def _provenance_header(
     )
 
 
-def _process_one_pdf(task: dict) -> dict:
-    """Worker entry point: OCR one PDF and write its markdown.
+def _process_one_pdf_inproc(task: dict) -> dict:
+    """Worker entry point for in-process engines (qwen3-vl / tesseract).
 
     Args:
-        task: ``{pdf_path, category, destination, engine, source_rel, root}``.
+        task: ``{pdf_path, category, destination, engine, source_rel, root,
+        ingested_at}``.
 
     Returns:
         ``{status, pdf, destination, pages, error?}``.
@@ -180,24 +193,82 @@ def _process_one_pdf(task: dict) -> dict:
             pass
 
 
+def _process_one_pdf_rasterize(task: dict) -> dict:
+    """Worker entry point for the codex-native engine: rasterize to a cache.
+
+    Args:
+        task: ``{pdf_path, destination, source_rel, cache_dir, ingested_at}``.
+
+    Returns:
+        ``{status, pdf, destination, pages, page_paths[], error?}``.
+    """
+
+    pdf_path = Path(task["pdf_path"])
+    destination = Path(task["destination"])
+    source_rel = task["source_rel"]
+    cache_dir = Path(task["cache_dir"])
+
+    try:
+        # Wipe any stale cache for this stem so page counts can shrink between
+        # ingest runs (e.g., the user re-exported a shorter PDF).
+        if cache_dir.exists():
+            shutil.rmtree(cache_dir, ignore_errors=True)
+        page_paths = _render_pdf(pdf_path, cache_dir)
+        return {
+            "status": "pending",
+            "pdf": source_rel,
+            "destination": str(destination),
+            "pages": len(page_paths),
+            "page_paths": [str(p) for p in page_paths],
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "status": "failed",
+            "pdf": source_rel,
+            "destination": str(destination),
+            "pages": 0,
+            "error": f"{type(exc).__name__}: {exc}",
+        }
+
+
 def ingest_pdfs(
-    engine: str = "openai-vision",
+    engine: str = _DEFAULT_ENGINE,
     force: bool = False,
     categories: list[str] | None = None,
     project_root: str | None = None,
 ) -> dict:
-    """Render and OCR every materials PDF, writing converted markdown.
+    """Render and (optionally) OCR every materials PDF.
 
     Args:
-        engine: ``openai-vision``, ``qwen3-vl``, or ``tesseract``.
+        engine: ``codex-native`` (default — rasterize only, skill OCRs via
+            Codex's bundled vision), ``qwen3-vl``, or ``tesseract``.
         force: Reconvert even if the destination already exists.
         categories: Restrict to a subset of
             ``lectures|textbook|homework|solutions``.
         project_root: Project root; defaults to ``os.getcwd()``.
 
     Returns:
-        ``{converted: [...], skipped: [...], failed: [{path, error}], engine,
-        project_root}``.
+        For ``codex-native``::
+
+            {
+              "mode": "rasterize-only",
+              "engine": "codex-native",
+              "project_root": "...",
+              "pending":  [{path, destination, pages, page_paths, category}],
+              "skipped":  [...],
+              "failed":   [{path, error}],
+            }
+
+        For ``qwen3-vl`` / ``tesseract``::
+
+            {
+              "mode": "ocr-complete",
+              "engine": "...",
+              "project_root": "...",
+              "converted": [{path, destination, pages}],
+              "skipped":   [...],
+              "failed":    [{path, error}],
+            }
     """
 
     root = Path(project_root or os.getcwd()).resolve()
@@ -206,64 +277,118 @@ def ingest_pdfs(
         "%Y-%m-%dT%H:%M:%SZ"
     )
 
+    is_inproc = engine in _IN_PROCESS
+
     tasks: list[dict] = []
     skipped: list[str] = []
+    pending_categories: dict[str, str] = {}
     for pdf_path, category in pdfs:
         destination = root / "converted" / category / f"{pdf_path.stem}.md"
         source_rel = str(pdf_path.relative_to(root))
         if destination.exists() and not force:
             skipped.append(source_rel)
             continue
-        tasks.append(
-            {
-                "pdf_path": str(pdf_path),
-                "category": category,
-                "destination": str(destination),
-                "engine": engine,
-                "source_rel": source_rel,
-                "root": str(root),
-                "ingested_at": ingested_at,
-            }
-        )
+        if is_inproc:
+            tasks.append(
+                {
+                    "pdf_path": str(pdf_path),
+                    "category": category,
+                    "destination": str(destination),
+                    "engine": engine,
+                    "source_rel": source_rel,
+                    "root": str(root),
+                    "ingested_at": ingested_at,
+                }
+            )
+        else:
+            cache_dir = root / _CACHE_DIRNAME / "pages" / pdf_path.stem
+            tasks.append(
+                {
+                    "pdf_path": str(pdf_path),
+                    "category": category,
+                    "destination": str(destination),
+                    "source_rel": source_rel,
+                    "cache_dir": str(cache_dir),
+                    "ingested_at": ingested_at,
+                }
+            )
+            pending_categories[source_rel] = category
 
     converted: list[dict] = []
+    pending: list[dict] = []
     failed: list[dict] = []
 
     if tasks:
+        worker_fn = _process_one_pdf_inproc if is_inproc else _process_one_pdf_rasterize
         workers = max(1, _default_workers(engine))
         workers = min(workers, len(tasks))
         if workers == 1:
             for task in tasks:
-                result = _process_one_pdf(task)
-                _collect(result, converted, failed)
+                _collect(
+                    worker_fn(task),
+                    converted,
+                    pending,
+                    failed,
+                    pending_categories,
+                )
         else:
             with ProcessPoolExecutor(max_workers=workers) as pool:
-                futures = [pool.submit(_process_one_pdf, t) for t in tasks]
+                futures = [pool.submit(worker_fn, t) for t in tasks]
                 for fut in as_completed(futures):
-                    _collect(fut.result(), converted, failed)
+                    _collect(
+                        fut.result(),
+                        converted,
+                        pending,
+                        failed,
+                        pending_categories,
+                    )
 
+    if is_inproc:
+        return {
+            "mode": "ocr-complete",
+            "engine": engine,
+            "project_root": str(root),
+            "converted": converted,
+            "skipped": skipped,
+            "failed": failed,
+        }
     return {
+        "mode": "rasterize-only",
         "engine": engine,
         "project_root": str(root),
-        "converted": converted,
+        "pending": pending,
         "skipped": skipped,
         "failed": failed,
+        "ingested_at": ingested_at,
     }
 
 
 def _collect(
     result: dict,
     converted: list[dict],
+    pending: list[dict],
     failed: list[dict],
+    pending_categories: dict[str, str],
 ) -> None:
-    """Route a worker result into the converted/failed bucket."""
+    """Route a worker result into the converted/pending/failed bucket."""
 
-    if result.get("status") == "converted":
+    status = result.get("status")
+    if status == "converted":
         converted.append(
             {
                 "path": result["pdf"],
                 "destination": result["destination"],
                 "pages": result["pages"],
+            }
+        )
+    elif status == "pending":
+        pending.append(
+            {
+                "path": result["pdf"],
+                "destination": result["destination"],
+                "pages": result["pages"],
+                "page_paths": result["page_paths"],
+                "category": pending_categories.get(result["pdf"], ""),
             }
         )
     else:

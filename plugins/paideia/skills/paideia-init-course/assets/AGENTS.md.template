@@ -16,9 +16,11 @@ WEAK_ZONES:  $WEAK_ZONES
 OCR_ENGINE:  $OCR_ENGINE
 ```
 
-`OCR_ENGINE` is one of `openai-vision` (default, needs `OPENAI_API_KEY`), `qwen3-vl` (local
-Ollama, offline), or `tesseract` (lightest, lowest fidelity). The value in `.course-meta`
-is authoritative; any skill can override per-call with `--ocr=<engine>`.
+`OCR_ENGINE` is one of `codex-native` (default — renders PDFs to PNG and reads them via
+Codex CLI's bundled vision, no extra API billing for ChatGPT Plus/Pro/Business subscribers),
+`qwen3-vl` (local Ollama, fully offline), or `tesseract` (lightest, lowest fidelity). The
+value in `.course-meta` is authoritative; any skill can override per-call with
+`--ocr=<engine>`.
 
 ## Directory map
 

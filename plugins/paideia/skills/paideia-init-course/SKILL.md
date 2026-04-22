@@ -1,6 +1,6 @@
 ---
 name: paideia-init-course
-description: Bootstrap the current directory into a fresh PAIDEIA course workspace. Checks system dependencies (Python, poppler, tesseract, optionally ollama), prompts for course metadata plus an OCR engine (openai-vision / qwen3-vl / tesseract), creates the directory skeleton, writes AGENTS.md, and runs git init. Run once per course folder, in that folder's CWD.
+description: Bootstrap the current directory into a fresh PAIDEIA course workspace. Checks system dependencies (Python, poppler, tesseract, optionally ollama), prompts for course metadata plus an OCR engine (codex-native / qwen3-vl / tesseract), creates the directory skeleton, writes AGENTS.md, and runs git init. Run once per course folder, in that folder's CWD.
 ---
 
 # paideia-init-course
@@ -13,15 +13,14 @@ Keep chat output compact. The user is watching progress.
 
 ```bash
 command -v pdftoppm  >/dev/null 2>&1 && echo "poppler: ok"   || echo "poppler: MISSING"
-command -v tesseract >/dev/null 2>&1 && echo "tesseract: ok" || echo "tesseract: MISSING"
-command -v ollama    >/dev/null 2>&1 && echo "ollama: ok (optional)" || echo "ollama: not installed (optional, only needed for --ocr=qwen3-vl)"
-tesseract --list-langs 2>&1 | grep -q '^kor$' && echo "tesseract-kor: ok" || echo "tesseract-kor: MISSING"
+command -v tesseract >/dev/null 2>&1 && echo "tesseract: ok (optional — only for --ocr=tesseract)" || echo "tesseract: not installed (optional)"
+command -v ollama    >/dev/null 2>&1 && echo "ollama: ok (optional)" || echo "ollama: not installed (optional, only for --ocr=qwen3-vl)"
 ```
 
-`poppler` and `tesseract` (+ Korean trained data) are required. `ollama` is only needed if the user picks `qwen3-vl` in Step 3. For missing items, print the install command — do not auto-run, they typically need sudo/brew:
+`poppler` is required for every engine (it rasterizes PDFs to PNG). `tesseract` is only needed if the user picks `tesseract` in Step 3; `ollama` only for `qwen3-vl`. For missing required items, print the install command — do not auto-run (typically needs sudo/brew):
 
-- macOS: `brew install poppler tesseract tesseract-lang`
-- Ubuntu: `sudo apt-get install poppler-utils tesseract-ocr tesseract-ocr-kor`
+- macOS: `brew install poppler` (plus `tesseract tesseract-lang` or `ollama` depending on engine)
+- Ubuntu: `sudo apt-get install poppler-utils` (plus `tesseract-ocr tesseract-ocr-eng tesseract-ocr-kor` or Ollama as needed)
 
 ## Step 2 — Check Python deps
 
@@ -30,7 +29,7 @@ python3 -c "import mcp.server, pypdf, pytesseract, pdf2image, PIL, reportlab, ht
   || echo "MISSING_PYTHON_DEPS"
 ```
 
-`mcp` is the stdio protocol package that the bundled `paideia-mcp` server imports at startup — if it's missing, Codex shows a scary "MCP startup failed: handshaking with MCP server failed" banner on every session start. Installing it here clears that. `httpx` is needed by the `openai-vision` and `qwen3-vl` OCR paths. The rest (`pypdf`, `pytesseract`, `pdf2image`, `pillow`, `reportlab`) are the PDF + OCR + cheatsheet-PDF pipeline.
+`mcp` is the stdio protocol package that the bundled `paideia-mcp` server imports at startup — if it's missing, Codex shows a scary "MCP startup failed: handshaking with MCP server failed" banner on every session start. Installing it here clears that. `httpx` is needed by the `qwen3-vl` OCR path (Ollama HTTP API). The rest (`pypdf`, `pytesseract`, `pdf2image`, `pillow`, `reportlab`) are the PDF + OCR + cheatsheet-PDF pipeline.
 
 If any are missing, offer:
 
@@ -48,20 +47,21 @@ Ask the user in Korean:
 ```
 OCR 엔진을 선택해 주세요 (이후 `$paideia-grade --ocr=<engine>`로 호출마다 덮어쓸 수 있습니다):
 
-  1) openai-vision — OpenAI Vision (기본값, OPENAI_API_KEY 필요, 필기 정확도 높음)
+  1) codex-native — Codex CLI 내장 비전으로 직접 읽기 (기본값, ChatGPT Plus/Pro/Business
+                     구독으로 이미 포함 — 별도 API 과금 없음, 필기/수식/한글 정확도 최상)
   2) qwen3-vl      — 로컬 Qwen3-VL 8B (외부 전송 전혀 없음, 최초 ~6 GB 다운로드 필요)
-  3) tesseract     — pytesseract eng+kor (가장 가볍고 빠름, 필기 정확도는 낮음)
+  3) tesseract     — pytesseract eng/kor (가장 가볍고 빠름, 필기 정확도는 낮음)
 
-  입력 없이 Enter 시: openai-vision
+  입력 없이 Enter 시: codex-native
 ```
 
-Normalize to one of `openai-vision` / `qwen3-vl` / `tesseract`. Hold the value as `$OCR_ENGINE` for later steps.
+Normalize to one of `codex-native` / `qwen3-vl` / `tesseract`. Hold the value as `$OCR_ENGINE` for later steps.
 
-If the user picked `openai-vision`, also verify `OPENAI_API_KEY` is set (`test -n "$OPENAI_API_KEY" && echo set || echo unset`). If unset, warn — the first `$paideia-ingest` or `$paideia-grade` will fail until it's exported.
+`codex-native` has no extra auth step — the user's Codex CLI session is already authenticated ("Sign in with ChatGPT"), and Codex reads page images via its built-in vision. No `OPENAI_API_KEY` required.
 
 ## Step 3a — Ollama model pull (only if `$OCR_ENGINE = qwen3-vl`)
 
-Skip entirely for `openai-vision` / `tesseract`.
+Skip entirely for `codex-native` / `tesseract`.
 
 If ollama binary is missing: stop and tell the user to install it first (`brew install ollama` on macOS, `https://ollama.com/install.sh` on Linux), then re-run `$paideia-init-course`.
 

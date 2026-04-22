@@ -53,6 +53,8 @@ ERRORS_LOG_SEED = """# Error log
 
 
 GITIGNORE = """.codex/cache/
+.paideia-cache/
+answers/.paideia-cache/
 answers/*.pdf
 answers/converted/*.md
 answers/converted/.tmp-*/
@@ -68,7 +70,7 @@ __pycache__/
 """
 
 
-VALID_ENGINES = {"openai-vision", "qwen3-vl", "tesseract"}
+VALID_ENGINES = {"codex-native", "qwen3-vl", "tesseract"}
 
 
 def _log(tag: str, path: Path) -> None:
@@ -147,7 +149,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--exam-date", required=True)
     p.add_argument("--exam-type", required=True)
     p.add_argument("--weak-zones", default="unknown")
-    p.add_argument("--ocr-engine", default="openai-vision")
+    p.add_argument("--ocr-engine", default="codex-native")
     p.add_argument("--template", default=None, help="Override AGENTS.md.template path.")
     p.add_argument(
         "--root",
