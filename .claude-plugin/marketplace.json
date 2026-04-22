@@ -1,0 +1,16 @@
+{
+  "name": "paideia-marketplace",
+  "owner": {
+    "name": "TaewoooPark",
+    "url": "https://github.com/TaewoooPark"
+  },
+  "plugins": [
+    {
+      "name": "paideia",
+      "source": "./plugins/paideia",
+      "description": "Exam-prep workspace for math/physics courses, Codex-native. 14 skills + a bundled stdio MCP server (paideia-mcp) that owns parallel vision ingest, OCR (openai-vision / Qwen3-VL / Tesseract), strategy-grading, and phase detection. All artifacts are plain markdown.",
+      "version": "0.1.0",
+      "keywords": ["exam-prep", "math", "physics", "ocr", "openai-vision", "mcp", "codex"]
+    }
+  ]
+}
