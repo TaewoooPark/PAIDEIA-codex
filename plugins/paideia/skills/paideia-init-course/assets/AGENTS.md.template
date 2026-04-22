@@ -40,6 +40,7 @@ skill body before acting. Core verbs:
 - `$paideia-ingest` — every PDF in `materials/**` → LaTeX markdown in `converted/**`, via
   the bundled `paideia-mcp` server's parallel vision pipeline.
 - `$paideia-analyze` — build `course-index/{summary,patterns,coverage}.md` from `converted/`.
+- `$paideia-phase` — print the current artifact-derived phase (`setup` → `cool`).
 - `$paideia-hwmap`, `$paideia-pattern`, `$paideia-derive` — navigate the knowledge base.
 - `$paideia-quiz`, `$paideia-blind`, `$paideia-twin`, `$paideia-chain`, `$paideia-mock` — drills.
 - `$paideia-grade` — OCR a scanned answer PDF, strategy-grade, append `errors/log.md`.
