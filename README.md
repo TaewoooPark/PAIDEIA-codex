@@ -162,6 +162,15 @@ Supporting: `$paideia-hwmap` surfaces HW-density exam-probability, `$paideia-ini
 
 If you don't install Ollama, Paideia's default engine (`codex-native`) reads page images through Codex CLI's built-in vision — the same vision your ChatGPT subscription already includes. No extra install, no second API key to manage.
 
+### Sandbox note
+
+If you run Paideia inside a sandboxed Codex session, local-engine and verification flows may trigger an approval prompt:
+
+- `qwen3-vl` talks to the local Ollama HTTP server at `http://localhost:11434`
+- live verification commands such as `codex exec --image ...` need to run outside the shell sandbox
+
+If Codex asks for approval in either case, click **Approve** so the plugin can reach the local model or run the verification command. Otherwise the OCR/test call can fail even when Ollama and Codex are installed correctly.
+
 ### Install via Codex plugin marketplace
 
 Run each line as a separate command inside Codex:
@@ -176,7 +185,7 @@ Run each line as a separate command inside Codex:
 
 > The full `https://...` URL is deliberate — `owner/repo` shorthand can make the CLI try SSH first, which fails if you don't have a GitHub SSH key registered. HTTPS always works.
 
-After install, 14 verbs become available under the `$paideia-` prefix, and the `paideia-mcp` stdio server auto-launches when you enter a course folder.
+After install, 15 verbs become available under the `$paideia-` prefix, and the `paideia-mcp` stdio server auto-launches when you enter a course folder.
 
 ### Per-course bootstrap
 
@@ -192,7 +201,7 @@ This interactively:
 3. Asks which OCR engine you want as the default: `codex-native` (pages read via Codex CLI's bundled vision — no extra API key, no extra install), `qwen3-vl` (local Ollama, pulls the 6 GB model in the background), or `tesseract` (lightest, lowest fidelity).
 4. Creates the directory skeleton (`materials/`, `converted/`, `course-index/`, `quizzes/`, `mock/`, `twins/`, `chain/`, `derivations/`, `cheatsheet/`, `weakmap/`, `answers/converted/`, `errors/`).
 5. Writes `.course-meta` (carries `OCR_ENGINE`, read by `$paideia-grade`) and a project-level `AGENTS.md`.
-6. `git init` so your prep is versioned from the first keystroke.
+6. Runs `git init` if needed and merges the PAIDEIA-managed `.gitignore` rules so your prep is versioned from the first keystroke.
 
 You can always override the OCR engine for a single grade call: `$paideia-grade --ocr=codex-native path/to/answer.pdf`.
 
@@ -206,7 +215,7 @@ After `$paideia-init-course`, your course folder looks like this:
 my-course/
 ├── .course-meta                     # course name, exam date, OCR engine
 ├── AGENTS.md                        # project rules Codex reads every turn
-├── .gitignore                       # hides answer PDFs, solution keys, OCR scratch
+├── .gitignore                       # hides raw answer PDFs, OCR scratch, optional PDF export
 │
 ├── materials/                       # YOU DROP RAW FILES HERE (PDF or MD)
 │   ├── lectures/                    # professor's notes, slide decks
@@ -321,13 +330,14 @@ $paideia-weakmap                    # top 3 only. Do not learn new things.
 
 ---
 
-## Verbs (14 total)
+## Verbs (15 total)
 
 | Verb | Purpose |
 |------|---------|
 | `$paideia-init-course` | Bootstrap a fresh course folder (dep check, skeleton, metadata prompt, background `ollama pull`) |
 | `$paideia-ingest [--force]` | Every PDF in `materials/**` → markdown in `converted/**` via the `paideia-mcp` parallel vision pipeline |
 | `$paideia-analyze [hints]` | Build `course-index/{summary,patterns,coverage}.md` |
+| `$paideia-phase` | Show the current artifact-derived phase snapshot (`setup` → `cool`) |
 | `$paideia-hwmap hot\|<§>` | Surface 🔥🔥 Exam-primary sections ranked by HW density |
 | `$paideia-pattern <§\|Pk\|keyword>` | Show pattern cards from course-index |
 | `$paideia-derive <target>` | Clean reference derivation to `derivations/<slug>.md` |
@@ -352,7 +362,7 @@ The Claude edition drove parallel vision ingest by spawning one `general-purpose
 |------|--------------|
 | `ingest_pdfs` | Render every `materials/**/*.pdf` to PNGs, resize to ≤1800 px on the long edge, then either (a) hand the page paths back to the calling skill when `engine=codex-native` (Codex reads them with its bundled vision), or (b) OCR in-process and write LaTeX markdown to `converted/**` when `engine=qwen3-vl` / `tesseract`. Deterministic `ProcessPoolExecutor` fan-out, resumable per PDF. |
 | `grade_pdf` | Same dual behavior for a single hand-written answer PDF: `codex-native` rasterizes + returns page paths; `qwen3-vl` / `tesseract` run OCR in-process and write `answers/converted/<stem>.md` with a confidence tier. |
-| `build_course_index` | Read `converted/**`, extract topic tree / recurring solution patterns (P1..Pk) / HW-density coverage, write `course-index/{summary,patterns,coverage}.md`. |
+| `build_course_index` | Read `converted/**`, write a machine-generated baseline `course-index/{summary,patterns,coverage}.md`, and return the inventory the analyze skill can refine. |
 | `course_phase` | Artifact-derived phase (setup → diag → drill → mock → cram → cool). Returns `{phase, days_until_exam, top_miss_pattern}`. Used by `$paideia-phase` and any skill that needs to know where the user is in the cycle. |
 
 Skills stay thin (~40–80 lines of orchestration): parse arguments, call the right MCP tool, summarize the result for the user. Raw page images never enter Codex's context.
@@ -443,7 +453,7 @@ PAIDEIA-codex/
     │       └── ocr/
     │           ├── qwen3vl.py           # local Ollama Qwen3-VL 8B
     │           └── tesseract.py         # pytesseract eng / kor (auto-detected)
-    └── skills/                          # 14 verb-skills (paideia-ingest, paideia-grade, ...)
+    └── skills/                          # 15 verb-skills (paideia-ingest, paideia-grade, paideia-phase, ...)
         ├── paideia-init-course/
         │   ├── SKILL.md
         │   ├── scripts/bootstrap.py
