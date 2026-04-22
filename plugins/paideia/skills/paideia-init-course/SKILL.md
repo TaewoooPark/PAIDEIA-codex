@@ -26,18 +26,20 @@ tesseract --list-langs 2>&1 | grep -q '^kor$' && echo "tesseract-kor: ok" || ech
 ## Step 2 — Check Python deps
 
 ```bash
-python3 -c "import pypdf, pytesseract, pdf2image, PIL, reportlab, httpx" 2>&1 \
+python3 -c "import mcp.server, pypdf, pytesseract, pdf2image, PIL, reportlab, httpx" 2>&1 \
   || echo "MISSING_PYTHON_DEPS"
 ```
+
+`mcp` is the stdio protocol package that the bundled `paideia-mcp` server imports at startup — if it's missing, Codex shows a scary "MCP startup failed: handshaking with MCP server failed" banner on every session start. Installing it here clears that. `httpx` is needed by the `openai-vision` and `qwen3-vl` OCR paths. The rest (`pypdf`, `pytesseract`, `pdf2image`, `pillow`, `reportlab`) are the PDF + OCR + cheatsheet-PDF pipeline.
 
 If any are missing, offer:
 
 ```bash
 python3 -m pip install --break-system-packages --user \
-  pypdf pytesseract pdf2image pillow reportlab httpx
+  "mcp>=1.2.0" pypdf pytesseract pdf2image pillow reportlab httpx
 ```
 
-Run only with the user's OK.
+Run only with the user's OK. After install completes, tell the user to restart their Codex session so the MCP server is re-spawned with deps in place.
 
 ## Step 3 — Ask: which OCR engine?
 

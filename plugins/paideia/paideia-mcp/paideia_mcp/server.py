@@ -8,6 +8,32 @@ paideia_mcp.server``.
 
 from __future__ import annotations
 
+import sys
+
+_REQUIRED_PACKAGES = (
+    "mcp",
+    "httpx",
+    "pypdf",
+    "PIL",
+    "pdf2image",
+    "pytesseract",
+    "reportlab",
+)
+_missing = []
+for _pkg in _REQUIRED_PACKAGES:
+    try:
+        __import__(_pkg)
+    except ImportError:
+        _missing.append(_pkg)
+
+if _missing:
+    sys.stderr.write(
+        "paideia-mcp: missing Python packages: " + ", ".join(_missing) + "\n"
+        "paideia-mcp: cd into a course folder and run `$paideia-init-course` "
+        "to install them, then restart Codex.\n"
+    )
+    sys.exit(0)
+
 import asyncio
 import json
 from typing import Any
