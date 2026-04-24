@@ -3,6 +3,11 @@
 Ports ``detect_phase``, ``top_miss``, ``days_until``, ``parse_meta`` from the
 Claude Code plugin's ``scripts/statusline.py`` and exposes the ``course_phase``
 MCP tool.
+
+Phase detection is activity-based: a seeded ``patterns.md`` or an empty
+``mock/`` file does not advance the phase on its own. The student must have
+at least one graded entry in ``errors/log.md`` before the phase moves past
+``diag``, and a mock-sourced entry before ``mock`` fires.
 """
 
 from __future__ import annotations
@@ -11,6 +16,9 @@ import datetime
 import glob
 import re
 from pathlib import Path
+
+_PATTERN_ENTRY_RX = re.compile(r"^\s*pattern:\s*P\d+", re.MULTILINE)
+_SOURCE_RX = re.compile(r"^\s*source:\s*(.+?)\s*$", re.MULTILINE)
 
 
 def parse_meta(cwd: Path) -> dict[str, str]:
@@ -57,8 +65,43 @@ def days_until(exam_date: str) -> int | None:
     return (target - datetime.date.today()).days
 
 
+def _has_error_entries(cwd: Path) -> bool:
+    """True if ``errors/log.md`` has at least one graded ``pattern: P<k>`` entry."""
+
+    log = cwd / "errors" / "log.md"
+    if not log.exists():
+        return False
+    try:
+        text = log.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    return bool(_PATTERN_ENTRY_RX.search(text))
+
+
+def _mock_was_graded(cwd: Path) -> bool:
+    """True if any ``errors/log.md`` entry's ``source:`` points to a mock."""
+
+    log = cwd / "errors" / "log.md"
+    if not log.exists():
+        return False
+    try:
+        text = log.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+    for match in _SOURCE_RX.finditer(text):
+        source = match.group(1).lower()
+        if "mock" in source:
+            return True
+    return False
+
+
 def detect_phase(cwd: Path, days: int | None) -> str:
     """Derive a workflow phase from the artifacts in ``cwd``.
+
+    The ladder is activity-based. Creating an empty ``patterns.md`` or a
+    seeded ``mock/<name>.md`` does not advance the phase — the student must
+    have actually graded something. This prevents the display from racing
+    ahead of the user's real progress.
 
     Args:
         cwd: Project root.
@@ -73,11 +116,11 @@ def detect_phase(cwd: Path, days: int | None) -> str:
     cheatsheet = cwd / "cheatsheet"
     if (cheatsheet / "final.pdf").exists() or (cheatsheet / "final.md").exists():
         return "cram"
-    if glob.glob(str(cwd / "mock" / "*.md")):
+    if _mock_was_graded(cwd):
         return "mock"
     if not (cwd / "course-index" / "patterns.md").exists():
         return "setup"
-    if glob.glob(str(cwd / "quizzes" / "*.md")):
+    if _has_error_entries(cwd):
         return "drill"
     return "diag"
 
