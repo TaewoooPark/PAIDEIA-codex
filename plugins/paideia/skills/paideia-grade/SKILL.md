@@ -39,7 +39,8 @@ The response shape depends on `mode`:
   "pages_processed": <int>,
   "tier":            "medium" | "low",
   "engine":          "qwen3-vl" | "tesseract",
-  "source":          "answers/<stem>.pdf"
+  "source":          "answers/<stem>.pdf",
+  "archived_to":     "answers/_archive/<stem>_<ts>.pdf" | null
 }
 ```
 
@@ -54,9 +55,12 @@ The response shape depends on `mode`:
   "page_paths":  ["<abs>/answers/.paideia-cache/<stem>/p01.png", ...],
   "pages":       <int>,
   "source":      "answers/<stem>.pdf",
-  "ingested_at": "2026-04-22T..."
+  "ingested_at": "2026-04-22T...",
+  "archived_to": "answers/_archive/<stem>_<ts>.pdf" | null
 }
 ```
+
+The `archived_to` field is non-null whenever the source PDF lived directly under `answers/` — the MCP moves it into `answers/_archive/<stem>_<ts>.pdf` after OCR succeeds so the next `$paideia-grade` run with no positional argument doesn't keep re-picking the same "most recently modified in `answers/`" file. The converted markdown stays in `answers/converted/` and is version-controlled; only bulky scans are archived. An absolute-path target (e.g. `$paideia-grade /tmp/scan.pdf`) is left alone — the caller chose that path on purpose.
 
 ### Step 2a — Only for `rasterize-only`: read pages + write markdown
 
@@ -154,6 +158,8 @@ Where `<type>` is one of `pattern-missed | wrong-variable | wrong-end-form | alg
 
 ## Step 6 — Log errors
 
+**Canonical `errors/log.md` schema — single source of truth.** Every skill that appends here (`$paideia-grade`, `$paideia-blind`, future drills) MUST use exactly these keys. Downstream readers (`paideia-mcp.course_phase`, `$paideia-phase`, `$paideia-weakmap`) pattern-match on `pattern:` and `source:`; any drift silently hides entries.
+
 For every non-✅ row, append one YAML entry to `errors/log.md`:
 
 ```yaml
@@ -161,8 +167,11 @@ For every non-✅ row, append one YAML entry to `errors/log.md`:
   pattern:    <Pk>
   error_type: pattern-missed | wrong-variable | wrong-end-form | algebraic | sign | definition
   summary:    "<one-line English or Korean description>"
+  source:     answers/converted/<stem>.md
   date:       <ISO8601>
 ```
+
+The `source:` field is load-bearing for phase detection: `paideia-mcp.course_phase` advances to `mock` when it sees a `source:` containing `mock`, and `$paideia-weakmap` can filter entries by origin (grade vs blind vs mock).
 
 This log is the **sole seed** of `$paideia-weakmap` and `$paideia-cheatsheet --pdf`. Do not skip it even if the user groans.
 

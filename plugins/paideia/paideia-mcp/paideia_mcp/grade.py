@@ -32,6 +32,7 @@ _DPI = 200
 _MAX_LONG_EDGE = 1800
 _DEFAULT_ENGINE = "codex-native"
 _CACHE_DIRNAME = ".paideia-cache"
+_ARCHIVE_DIRNAME = "_archive"
 
 _TIER_BY_ENGINE = {
     "codex-native": "high",
@@ -94,6 +95,43 @@ def _resolve_pdf(raw_path: str, root: Path) -> Path:
     if candidate.is_absolute():
         return candidate.resolve()
     return (root / candidate).resolve()
+
+
+def _archive_if_under_answers(pdf: Path, root: Path) -> str | None:
+    """Move ``pdf`` into ``answers/_archive/<stem>_<ts>.pdf`` when applicable.
+
+    The move only fires when the PDF lives directly under ``<root>/answers/``
+    (the common case for `$paideia-grade answers/<stem>.pdf`). Answer PDFs
+    dropped from an arbitrary absolute path are left alone — the caller
+    chose that path, so it's not our business to relocate it.
+
+    Returns the archived path (relative to ``root`` when possible) on a
+    successful move, or ``None`` when no archive happened.
+    """
+
+    try:
+        rel = pdf.relative_to(root)
+    except ValueError:
+        return None
+    parts = rel.parts
+    # Must be answers/<name>.pdf at depth 2 (not inside a subfolder like _archive/).
+    if len(parts) != 2 or parts[0] != "answers":
+        return None
+    archive_dir = root / "answers" / _ARCHIVE_DIRNAME
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%d-%H%M%SZ")
+    dest = archive_dir / f"{pdf.stem}_{ts}.pdf"
+    if not pdf.exists():
+        # Already moved (idempotent re-run) — nothing to do.
+        return None
+    try:
+        shutil.move(str(pdf), str(dest))
+    except OSError:
+        return None
+    try:
+        return str(dest.relative_to(root))
+    except ValueError:
+        return str(dest)
 
 
 def grade_pdf(
@@ -191,6 +229,7 @@ def grade_pdf(
             body_parts.append(f"## Page {i}\n\n{(page_md or '').strip()}\n")
         destination.write_text(header + "\n".join(body_parts), encoding="utf-8")
 
+        archived_to = _archive_if_under_answers(pdf, root)
         return {
             "mode": "ocr-complete",
             "markdown_path": str(destination),
@@ -198,6 +237,7 @@ def grade_pdf(
             "engine": selected_engine,
             "pages_processed": len(png_paths),
             "source": source_rel,
+            "archived_to": archived_to,
         }
 
     # codex-native: rasterize to a stable per-stem cache and hand the page
@@ -206,6 +246,7 @@ def grade_pdf(
     if cache_dir.exists():
         shutil.rmtree(cache_dir, ignore_errors=True)
     page_paths = _render_pdf(pdf, cache_dir)
+    archived_to = _archive_if_under_answers(pdf, root)
     return {
         "mode": "rasterize-only",
         "engine": selected_engine,
@@ -215,6 +256,7 @@ def grade_pdf(
         "pages": len(page_paths),
         "source": source_rel,
         "ingested_at": ingested_at,
+        "archived_to": archived_to,
     }
 
 
