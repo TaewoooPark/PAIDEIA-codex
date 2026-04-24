@@ -402,6 +402,10 @@ OCR noise in hand-written math makes strict algebraic grading useless — a sing
 
 Errors get logged as YAML to `errors/log.md` with a typed classification (`pattern-missed | wrong-variable | wrong-end-form | algebraic | sign | definition`). This log is the seed for `$paideia-weakmap` and the *only* input to `$paideia-cheatsheet --pdf`.
 
+The schema is canonical across every skill that appends here — `$paideia-grade`, `$paideia-blind`, and any future drill — with exactly the keys `problem_id · pattern · error_type · summary · source · date`. The single source of truth is `plugins/paideia/skills/paideia-grade/SKILL.md` §6; downstream readers (`paideia-mcp.course_phase`, `$paideia-phase`, `$paideia-weakmap`) pattern-match on `pattern:` and `source:`, and the `source:` field is what lets phase detection distinguish a mock-grade entry from a homework-grade entry. Any schema drift silently hides entries from the weakmap, so new drills must use the canonical keys.
+
+After `$paideia-grade` succeeds, the original hand-written PDF is moved from `answers/<stem>.pdf` into `answers/_archive/<stem>_<ts>.pdf` so the next invocation's "most recently modified in `answers/`" resolver stops re-picking the same stale file when you upload a newer scan. The converted markdown stays under `answers/converted/` and is version-controlled; only the bulky scan itself is archived (and gitignored via `answers/**/*.pdf`).
+
 ### Patterns extracted from *your* solutions
 
 `$paideia-analyze` doesn't ship a generic "calculus moves" list. It reads your course's actual solution manual, extracts recurring solution patterns, and labels them P1, P2, ... with worked instances that cite your own `converted/solutions/` files. The patterns are *your course's idioms*, not a textbook's. For a complex analysis course, P3 might be "closed contour + Jordan's lemma + residue at essential singularity." For a linear systems course, P3 might be "partial fractions + inverse Laplace with complex poles." Every discipline has its own moves; only the course itself reveals them.
@@ -418,14 +422,16 @@ Codex doesn't expose a persistent statusline slot the way Claude Code does, so t
 $paideia-phase
 ```
 
-Prints `setup · diag · drill · mock · cram · cool` along with `D-<days-to-exam>` and the top-miss pattern from the latest weakmap. The phase is derived from artifacts on disk (not a calendar), so it only advances when you actually produce the artifact:
+Prints `setup · diag · drill · mock · cram · cool` along with `D-<days-to-exam>` and the top-miss pattern from the latest weakmap. The phase is **activity-based**: creating an empty `patterns.md` or dropping a seeded `mock/<name>.md` does not advance it. The student must have actually graded something — an `errors/log.md` entry with a canonical `pattern:` key — before the phase moves past `diag`.
 
 - `setup` — `course-index/patterns.md` doesn't exist yet → run `$paideia-ingest` + `$paideia-analyze`
-- `diag` — patterns exist, no quizzes yet → run `$paideia-quiz all 20` for a broad diagnostic
-- `drill` — quizzes exist, no mock yet → cycle `$paideia-blind` · `$paideia-twin` · `$paideia-quiz weakmap`
-- `mock` — a mock exists, no cheatsheet yet → compress with `$paideia-cheatsheet --pdf`
+- `diag` — patterns exist, but `errors/log.md` has no graded entries yet → run `$paideia-quiz all 20` and grade it
+- `drill` — at least one graded entry lives in `errors/log.md` → cycle `$paideia-blind` · `$paideia-twin` · `$paideia-quiz weakmap`
+- `mock` — a mock-sourced entry (any `errors/log.md` row whose `source:` contains `mock`) has been graded → compress with `$paideia-cheatsheet --pdf`
 - `cram` — `cheatsheet/final.{md,pdf}` exists → taper, re-read the weakmap, stop learning new things
 - `cool` — `D-0` overrides everything (exam is today)
+
+Why activity-based rather than file-existence-based: an artifact that was never acted on is not the same signal as one the student produced. Treating `quizzes/*.md` (a problem set) as evidence of drilling conflates "a file exists" with "the student has actually drilled on it." Requiring a graded entry in `errors/log.md` ensures the phase reflects what the user did, not what the filesystem declares.
 
 ---
 
