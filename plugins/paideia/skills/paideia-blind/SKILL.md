@@ -43,15 +43,18 @@ Read `course-index/patterns.md`. If absent, tell the user to run `$paideia-analy
    - ❌ on any axis → point out specifically which axis failed, **without** revealing the correct answer. Ask for revision.
    - After 2 failed attempts on the same axis → give a one-line hint referencing the relevant pattern name.
 
-7. **Log errors** if the user needed revision. Append to `errors/log.md`:
+7. **Log errors** if the user needed revision. Use the **canonical schema from `paideia-grade` §6** — same keys `$paideia-grade` writes, so `$paideia-weakmap`, `$paideia-phase`, and `paideia-mcp.course_phase` see `/blind` errors too. Append to `errors/log.md`:
 
    ```yaml
    - problem_id: <id>
-     pattern_missed_initial: <Pk>
-     strategy_error_type: pattern | variable-choice | end-form
-     summary: "<1 line>"
-     date: <ISO>
+     pattern:    <Pk>
+     error_type: pattern-missed | wrong-variable | wrong-end-form
+     summary:    "<1 line>"
+     source:     blind/<id>
+     date:       <ISO>
    ```
+
+   Map the strategy axis to `error_type`: pattern axis → `pattern-missed`, variable axis → `wrong-variable`, end-form axis → `wrong-end-form`. The `source:` field lets `phase.py::_mock_was_graded` and downstream consumers distinguish entries from `/grade` (answers/converted/…) vs `/blind` (blind/…) vs `/mock` (any source containing `mock`).
 
 8. **Close:**
    "같은 유형 retention 확인하려면 `$paideia-twin <id>`로 변형 하나 풀어봐."

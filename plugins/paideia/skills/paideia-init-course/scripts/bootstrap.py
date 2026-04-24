@@ -43,12 +43,18 @@ DIRS = [
 
 ERRORS_LOG_SEED = """# Error log
 
-<!-- Append-only YAML entries. Schema:
+<!-- Append-only YAML entries. Canonical schema (single source of truth —
+     see plugins/paideia/skills/paideia-grade/SKILL.md §6):
+
 - problem_id: <id>
   pattern:    <Pk>
   error_type: pattern-missed | wrong-variable | wrong-end-form | algebraic | sign | definition
   summary:    "<1 line>"
+  source:     answers/converted/<stem>.md | blind/<id> | mock/<ts>.md
   date:       <ISO8601>
+
+The `source:` field drives phase detection — any source containing `mock`
+advances the course to the `mock` phase via paideia-mcp.course_phase.
 -->
 """
 
