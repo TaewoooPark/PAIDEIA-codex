@@ -19,6 +19,18 @@ _SUPPORTED = ("codex-native", "qwen3-vl", "tesseract")
 _IN_PROCESS = ("qwen3-vl", "tesseract")
 
 
+def _resolve_course_name(project_root: str | None) -> str | None:
+    """Read ``COURSE_NAME`` from ``.course-meta`` under ``project_root``."""
+
+    if not project_root:
+        return None
+    from ..phase import parse_meta
+
+    meta = parse_meta(Path(project_root))
+    value = meta.get("COURSE_NAME", "").strip()
+    return value or None
+
+
 def run_ocr(
     engine: str,
     png_paths: list[Path] | list[str],
@@ -30,8 +42,9 @@ def run_ocr(
     Args:
         engine: One of ``codex-native``, ``qwen3-vl``, ``tesseract``.
         png_paths: Absolute paths (or strings) pointing at rendered PNG pages.
-        project_root: Optional project root hint; currently unused but kept
-            for symmetry with the other public tools.
+        project_root: Optional project root hint. When set, ``.course-meta``
+            ``COURSE_NAME`` is forwarded to engines that parameterize their
+            prompt on the course (currently only ``qwen3-vl``).
 
     Returns:
         One markdown string per input page, in the same order.
@@ -55,12 +68,14 @@ def run_ocr(
         )
 
     paths = [Path(p) for p in png_paths]
-    _ = project_root  # noted but not plumbed; engines work on absolute paths
 
     if engine == "qwen3-vl":
         from . import qwen3vl
 
-        return qwen3vl.transcribe_pages(paths)
+        return qwen3vl.transcribe_pages(
+            paths,
+            course_name=_resolve_course_name(project_root),
+        )
     # tesseract
     from . import tesseract
 
