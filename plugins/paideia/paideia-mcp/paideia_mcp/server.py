@@ -3,36 +3,20 @@
 Registers four tools — ``ingest_pdfs``, ``grade_pdf``, ``build_course_index``,
 ``course_phase`` — and dispatches JSON-encoded results over the stdio MCP
 channel. The Codex plugin loader launches this via ``python -m
-paideia_mcp.server``.
+paideia_mcp.bootstrap`` so dependencies can be installed before this module
+imports third-party packages.
 """
 
 from __future__ import annotations
 
 import sys
 
-_REQUIRED_PACKAGES = (
-    "mcp",
-    "httpx",
-    "pypdf",
-    "PIL",
-    "pdf2image",
-    "pytesseract",
-    "reportlab",
-)
-_missing = []
-for _pkg in _REQUIRED_PACKAGES:
-    try:
-        __import__(_pkg)
-    except ImportError:
-        _missing.append(_pkg)
+from .bootstrap import missing_imports, missing_message
 
+_missing = missing_imports()
 if _missing:
-    sys.stderr.write(
-        "paideia-mcp: missing Python packages: " + ", ".join(_missing) + "\n"
-        "paideia-mcp: cd into a course folder and run `$paideia-init-course` "
-        "to install them, then restart Codex.\n"
-    )
-    sys.exit(0)
+    sys.stderr.write(missing_message(_missing))
+    sys.exit(1)
 
 import asyncio
 import json

@@ -16,13 +16,19 @@ Why MCP and not inline in skills: the ingest pipeline needs deterministic parall
 Launched automatically by Codex when the plugin is installed (declared in `plugins/paideia/.mcp.json`). For dev / CI:
 
 ```bash
-python3 -m paideia_mcp.server
+python3 -m paideia_mcp.bootstrap
 ```
+
+The bootstrap entrypoint installs missing Python package dependencies into the
+current user's site-packages before importing the MCP server. Set
+`PAIDEIA_MCP_AUTO_INSTALL=0` to disable that behavior and fail with the manual
+`pip install` command instead.
 
 ## Layout
 
 ```
 paideia_mcp/
+├── bootstrap.py        dependency preflight + server launcher
 ├── server.py           stdio entrypoint, tool registration
 ├── ingest.py           ingest_pdfs tool (dual-mode: rasterize-only vs ocr-complete)
 ├── grade.py            grade_pdf tool (same dual-mode)

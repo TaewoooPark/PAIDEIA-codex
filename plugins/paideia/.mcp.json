@@ -4,9 +4,9 @@
       "command": "python3",
       "args": [
         "-c",
-        "exec(\"import os\\nimport pathlib\\nimport sys\\n\\nroots = []\\nenv = os.environ.get(\\\"CODEX_PLUGIN_ROOT\\\")\\nif env:\\n    roots.append(pathlib.Path(env))\\n\\nhome = pathlib.Path.home()\\nfor pattern in (\\n    \\\".codex/plugins/cache/*/paideia/*\\\",\\n    \\\".codex/.tmp/marketplaces/*/plugins/paideia\\\",\\n):\\n    roots.extend(home.glob(pattern))\\n\\nfor root in roots:\\n    mcp = root / \\\"paideia-mcp\\\"\\n    if (mcp / \\\"paideia_mcp\\\" / \\\"server.py\\\").exists():\\n        sys.path.insert(0, str(mcp))\\n        break\\nelse:\\n    raise SystemExit(\\n        \\\"paideia-mcp: cannot locate paideia_mcp package; \\\"\\n        f\\\"CODEX_PLUGIN_ROOT={env!r}\\\"\\n    )\\n\\nfrom paideia_mcp.server import main\\n\\nmain()\")"
+        "exec(\"import os\\nimport pathlib\\nimport sys\\n\\nroots = []\\nenv = os.environ.get(\\\"CODEX_PLUGIN_ROOT\\\")\\nif env:\\n    roots.append(pathlib.Path(env))\\n\\nhome = pathlib.Path.home()\\nfor pattern in (\\n    \\\".codex/plugins/cache/*/paideia/*\\\",\\n    \\\".codex/.tmp/marketplaces/*/plugins/paideia\\\",\\n):\\n    roots.extend(home.glob(pattern))\\n\\nfor root in roots:\\n    mcp = root / \\\"paideia-mcp\\\"\\n    if (mcp / \\\"paideia_mcp\\\" / \\\"bootstrap.py\\\").exists():\\n        sys.path.insert(0, str(mcp))\\n        break\\nelse:\\n    raise SystemExit(\\n        \\\"paideia-mcp: cannot locate paideia_mcp package; \\\"\\n        f\\\"CODEX_PLUGIN_ROOT={env!r}\\\"\\n    )\\n\\nfrom paideia_mcp.bootstrap import main\\n\\nmain()\")"
       ],
-      "startup_timeout_sec": 15,
+      "startup_timeout_sec": 120,
       "tool_timeout_sec": 1800,
       "supports_parallel_tool_calls": true
     }
