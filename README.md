@@ -14,10 +14,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/github/license/TaewoooPark/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="License">
-  <img src="https://img.shields.io/github/stars/TaewoooPark/PAIDEIA-codex?style=flat-square&logo=github&logoColor=white&labelColor=000000&color=333333&cacheSeconds=3600" alt="GitHub stars">
-  <img src="https://img.shields.io/github/last-commit/TaewoooPark/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="Last commit">
-  <img src="https://img.shields.io/github/languages/top/TaewoooPark/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="Top language">
+  <img src="https://img.shields.io/github/license/OPTIMETA/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="License">
+  <img src="https://img.shields.io/github/stars/OPTIMETA/PAIDEIA-codex?style=flat-square&logo=github&logoColor=white&labelColor=000000&color=333333&cacheSeconds=3600" alt="GitHub stars">
+  <img src="https://img.shields.io/github/last-commit/OPTIMETA/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="Last commit">
+  <img src="https://img.shields.io/github/languages/top/OPTIMETA/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="Top language">
   &nbsp;
   <img src="https://img.shields.io/badge/OpenAI%20Codex-000000?style=flat-square&logo=openai&logoColor=white&labelColor=000000&cacheSeconds=3600" alt="OpenAI Codex">
   <img src="https://img.shields.io/badge/Plugin-000000?style=flat-square&labelColor=000000&color=000000&cacheSeconds=3600" alt="Plugin">
@@ -39,7 +39,7 @@
 </p>
 
 <p align="center">
-  <sub>Claude Code edition of the same plugin: <a href="https://github.com/TaewoooPark/PAIDEIA">TaewoooPark/PAIDEIA</a></sub>
+  <sub>Claude Code edition of the same plugin: <a href="https://github.com/OPTIMETA/PAIDEIA">OPTIMETA/PAIDEIA</a></sub>
 </p>
 
 ---
@@ -214,7 +214,7 @@ The desktop app is the smoothest reading surface for Paideia — `summary.md`, `
 2. Open any new conversation and run each line as its own command:
 
    ```
-   /plugins marketplace add https://github.com/TaewoooPark/PAIDEIA-codex.git
+   /plugins marketplace add https://github.com/OPTIMETA/PAIDEIA-codex.git
    ```
 
    ```
@@ -228,7 +228,7 @@ The desktop app is the smoothest reading surface for Paideia — `summary.md`, `
 If you prefer the terminal, install [Codex CLI](https://github.com/openai/codex) (`codex` on `PATH`) first, then run the same two commands inside `codex`, each as a separate line:
 
 ```
-/plugins marketplace add https://github.com/TaewoooPark/PAIDEIA-codex.git
+/plugins marketplace add https://github.com/OPTIMETA/PAIDEIA-codex.git
 ```
 
 ```
