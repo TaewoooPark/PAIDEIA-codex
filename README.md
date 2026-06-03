@@ -311,6 +311,10 @@ If you run Paideia from the Codex CLI rather than the Codex desktop app, this is
 
 VS Code with a markdown-math extension works too. The terminal — even with a markdown preview — is bad for math; don't fight that.
 
+## And the lecture end: Alt
+
+Obsidian is the companion at the reading end. **[Alt](https://www.altalt.io/ko/)** is the companion at the other end — where the lectures come in. Alt records and transcribes your lectures, and OPTIMETA's **Exam Radar** plugin runs inside it to rank topics by how strongly the professor emphasized them out loud. Send that into Paideia with `$paideia-alt`, and the loop closes: **attend the lecture → capture it → extract the exam signal → study what matters.** Lectures live in Alt, deep personal study lives in Paideia, and Exam Radar is the bridge — finally one continuous workflow instead of scattered tools.
+
 ---
 
 ## Full workflow — an example
