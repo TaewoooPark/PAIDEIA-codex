@@ -232,7 +232,8 @@ my-course/
 ├── course-index/                    # 지식 베이스 — $paideia-analyze가 생성
 │   ├── summary.md                   # 주제 트리 (§1, §1.1, §2, …)
 │   ├── patterns.md                  # 반복되는 풀이 패턴, P1, P2, … 라벨
-│   └── coverage.md                  # HW ↔ § 매핑 + 🔥🔥 / 🔥 / 🟡 / ⚪ 시험 티어
+│   ├── coverage.md                  # HW ↔ § 매핑 + 🔥🔥 / 🔥 / 🟡 / ⚪ 시험 티어
+│   └── radar.md                     # 강의 강조 신호 — $paideia-alt가 임포트
 │
 ├── answers/                         # 직접 필기 스캔 PDF를 넣는 곳
 │   └── converted/                   # $paideia-grade가 OCR한 마크다운을 여기에 씁니다
@@ -330,7 +331,7 @@ $paideia-weakmap                    # 상위 3개만. 새로운 것을 배우지
 
 ---
 
-## 명령어 (총 15개)
+## 명령어 (총 16개)
 
 | 명령 | 용도 |
 |------|------|
@@ -349,6 +350,7 @@ $paideia-weakmap                    # 상위 3개만. 새로운 것을 배우지
 | `$paideia-grade [--ocr=<engine>] [경로]` | `.course-meta`의 엔진 선택(Codex 내장 비전 / Qwen3-VL / Tesseract)으로 OCR 후 전략 채점, `errors/log.md`에 누적 기록 |
 | `$paideia-weakmap [개념]` | `weakmap/weakmap_<ts>.md`에 저장되는 우선순위 약점 리포트 |
 | `$paideia-cheatsheet [--pdf]` | 오류 주도 한 장짜리 치트시트 |
+| `$paideia-alt [붙여넣기]` | OPTIMETA Exam Radar(Alt 플러그인) 내보내기를 임포트 → `course-index/radar.md` + `coverage.md`의 강의 강조 열 + 골드존 weakmap |
 
 ---
 
@@ -476,7 +478,8 @@ PAIDEIA-codex/
         ├── paideia-chain/SKILL.md
         ├── paideia-mock/SKILL.md
         ├── paideia-weakmap/SKILL.md
-        └── paideia-cheatsheet/SKILL.md
+        ├── paideia-cheatsheet/SKILL.md
+        └── paideia-alt/SKILL.md
 ```
 
 ---

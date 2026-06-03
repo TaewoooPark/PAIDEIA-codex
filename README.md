@@ -213,7 +213,7 @@ The desktop app is the smoothest reading surface for Paideia — `summary.md`, `
    /plugins install paideia@paideia-marketplace
    ```
 
-3. The 15 `$paideia-` verbs are now available in every conversation, and the bundled `paideia-mcp` stdio server auto-launches when you enter a course folder. Continue to **Per-course bootstrap** below.
+3. The 16 `$paideia-` verbs are now available in every conversation, and the bundled `paideia-mcp` stdio server auto-launches when you enter a course folder. Continue to **Per-course bootstrap** below.
 
 ### Install via the Codex CLI
 
@@ -274,7 +274,8 @@ my-course/
 ├── course-index/                    # knowledge base — built by $paideia-analyze
 │   ├── summary.md                   # topic tree (§1, §1.1, §2, …)
 │   ├── patterns.md                  # recurring solution patterns, labeled P1, P2, …
-│   └── coverage.md                  # HW ↔ § map with 🔥🔥 / 🔥 / 🟡 / ⚪ exam tiers
+│   ├── coverage.md                  # HW ↔ § map with 🔥🔥 / 🔥 / 🟡 / ⚪ exam tiers
+│   └── radar.md                     # lecture-emphasis signal — imported by $paideia-alt
 │
 ├── answers/                         # YOU DROP HAND-WRITTEN SCAN PDFs HERE
 │   └── converted/                   # $paideia-grade writes OCR'd markdown here
@@ -372,7 +373,7 @@ $paideia-weakmap                    # top 3 only. Do not learn new things.
 
 ---
 
-## Verbs (15 total)
+## Verbs (16 total)
 
 | Verb | Purpose |
 |------|---------|
@@ -391,6 +392,7 @@ $paideia-weakmap                    # top 3 only. Do not learn new things.
 | `$paideia-grade [--ocr=<engine>] [path]` | OCR answer PDF via the engine set in `.course-meta` (Codex-native vision / Qwen3-VL / Tesseract), strategy-grade, append `errors/log.md` |
 | `$paideia-weakmap [concept]` | Priority-ranked weakness report saved to `weakmap/weakmap_<ts>.md` |
 | `$paideia-cheatsheet [--pdf]` | Error-driven one-pager |
+| `$paideia-alt [paste]` | Import an OPTIMETA Exam Radar (Alt plugin) export → `course-index/radar.md` + a lecture-emphasis column on `coverage.md` + a gold-zone weakmap |
 
 ---
 
@@ -501,7 +503,7 @@ PAIDEIA-codex/
     │       └── ocr/
     │           ├── qwen3vl.py           # local Ollama Qwen3-VL 8B
     │           └── tesseract.py         # pytesseract eng / kor (auto-detected)
-    └── skills/                          # 15 verb-skills (paideia-ingest, paideia-grade, paideia-phase, ...)
+    └── skills/                          # 16 verb-skills (paideia-ingest, paideia-grade, paideia-phase, ...)
         ├── paideia-init-course/
         │   ├── SKILL.md
         │   ├── scripts/bootstrap.py
@@ -518,7 +520,8 @@ PAIDEIA-codex/
         ├── paideia-chain/SKILL.md
         ├── paideia-mock/SKILL.md
         ├── paideia-weakmap/SKILL.md
-        └── paideia-cheatsheet/SKILL.md
+        ├── paideia-cheatsheet/SKILL.md
+        └── paideia-alt/SKILL.md
 ```
 
 ---
