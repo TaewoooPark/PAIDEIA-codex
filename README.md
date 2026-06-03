@@ -6,6 +6,14 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/OPTIMETA/PAIDEIA-Alt"><img height="30" src="https://img.shields.io/badge/Exam_Radar-OPTIMETA_Alt_plugin-333333?style=for-the-badge&labelColor=000000&color=333333" alt="Exam Radar — OPTIMETA Alt plugin"></a>
+</p>
+
+<p align="center">
+  <sub><em>Capture lectures with <a href="https://github.com/OPTIMETA/PAIDEIA-Alt"><strong>Exam Radar</strong></a> — OPTIMETA's Alt plugin — and study them with Paideia. Install it in Alt and run the two together: the whole arc, from sitting in the lecture to studying for the exam, lands in one workflow. Pipe a roadmap straight in with <code>$paideia-alt</code>.</em></sub>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/github/license/TaewoooPark/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="License">
   <img src="https://img.shields.io/github/stars/TaewoooPark/PAIDEIA-codex?style=flat-square&logo=github&logoColor=white&labelColor=000000&color=333333&cacheSeconds=3600" alt="GitHub stars">
   <img src="https://img.shields.io/github/last-commit/TaewoooPark/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="Last commit">

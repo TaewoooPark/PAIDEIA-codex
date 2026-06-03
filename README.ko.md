@@ -6,6 +6,14 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/OPTIMETA/PAIDEIA-Alt"><img height="30" src="https://img.shields.io/badge/Exam_Radar-OPTIMETA_Alt_plugin-333333?style=for-the-badge&labelColor=000000&color=333333" alt="Exam Radar — OPTIMETA Alt 플러그인"></a>
+</p>
+
+<p align="center">
+  <sub><em>강의는 <a href="https://github.com/OPTIMETA/PAIDEIA-Alt"><strong>Exam Radar</strong></a>(OPTIMETA의 Alt 플러그인)로 잡고, 공부는 Paideia로 합니다. Alt에 설치해 둘을 같이 쓰면 강의실에 앉아 있는 순간부터 시험 공부까지가 하나의 워크플로우로 이어집니다. 로드맵은 <code>$paideia-alt</code>로 곧장 흘려보내세요.</em></sub>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/github/license/TaewoooPark/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="라이선스">
   <img src="https://img.shields.io/github/stars/TaewoooPark/PAIDEIA-codex?style=flat-square&logo=github&logoColor=white&labelColor=000000&color=333333&cacheSeconds=3600" alt="GitHub 스타 수">
   <img src="https://img.shields.io/github/last-commit/TaewoooPark/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="최근 커밋">
