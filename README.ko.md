@@ -6,6 +6,14 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/OPTIMETA/PAIDEIA-Alt"><img height="30" src="https://img.shields.io/badge/Exam_Radar-OPTIMETA_Alt_plugin-333333?style=for-the-badge&labelColor=000000&color=333333" alt="Exam Radar — OPTIMETA Alt 플러그인"></a>
+</p>
+
+<p align="center">
+  <sub><em>강의는 <a href="https://github.com/OPTIMETA/PAIDEIA-Alt"><strong>Exam Radar</strong></a>(OPTIMETA의 Alt 플러그인)로 잡고, 공부는 Paideia로 합니다. Alt에 설치해 둘을 같이 쓰면 강의실에 앉아 있는 순간부터 시험 공부까지가 하나의 워크플로우로 이어집니다. 로드맵은 <code>$paideia-alt</code>로 곧장 흘려보내세요.</em></sub>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/github/license/TaewoooPark/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="라이선스">
   <img src="https://img.shields.io/github/stars/TaewoooPark/PAIDEIA-codex?style=flat-square&logo=github&logoColor=white&labelColor=000000&color=333333&cacheSeconds=3600" alt="GitHub 스타 수">
   <img src="https://img.shields.io/github/last-commit/TaewoooPark/PAIDEIA-codex?style=flat-square&labelColor=000000&color=333333&cacheSeconds=3600" alt="최근 커밋">
@@ -232,7 +240,8 @@ my-course/
 ├── course-index/                    # 지식 베이스 — $paideia-analyze가 생성
 │   ├── summary.md                   # 주제 트리 (§1, §1.1, §2, …)
 │   ├── patterns.md                  # 반복되는 풀이 패턴, P1, P2, … 라벨
-│   └── coverage.md                  # HW ↔ § 매핑 + 🔥🔥 / 🔥 / 🟡 / ⚪ 시험 티어
+│   ├── coverage.md                  # HW ↔ § 매핑 + 🔥🔥 / 🔥 / 🟡 / ⚪ 시험 티어
+│   └── radar.md                     # 강의 강조 신호 — $paideia-alt가 임포트
 │
 ├── answers/                         # 직접 필기 스캔 PDF를 넣는 곳
 │   └── converted/                   # $paideia-grade가 OCR한 마크다운을 여기에 씁니다
@@ -267,6 +276,10 @@ Paideia는 모든 것을 LaTeX 수식(`$...$`, `$$...$$`)이 포함된 평범한
 - 완전히 오프라인, 무료, 로컬에서 동작합니다. Paideia의 철학과 정확히 맞닿아 있습니다 — 당신의 필기, 당신의 디스크, 당신의 도구
 
 마크다운 수식 확장을 설치한 VS Code도 가능합니다. 다만 터미널은 — 마크다운 프리뷰를 얹더라도 — 수식을 읽기에 적합하지 않으니 억지로 맞추지 마세요.
+
+## 강의를 담는 쪽: Alt
+
+Obsidian이 '읽는 쪽' 동반자라면, **[Alt](https://www.altalt.io/ko/)**는 강의가 들어오는 '담는 쪽' 동반자입니다. Alt는 강의를 녹음·전사하고, 그 안에서 OPTIMETA의 **Exam Radar** 플러그인이 교수가 입으로 강조한 정도로 토픽을 추려 줍니다. 그 결과를 `$paideia-alt`로 Paideia에 흘려보내면 비로소 고리가 닫힙니다 — **강의를 듣고 → 담고 → 시험 신호를 뽑고 → 중요한 것만 공부**하는 전 과정이 흩어진 도구가 아니라 하나의 워크플로우가 됩니다. 강의 쪽은 Alt가, 깊은 개인 학습은 Paideia가, 그 사이의 다리는 Exam Radar가 맡습니다.
 
 ---
 
@@ -330,7 +343,7 @@ $paideia-weakmap                    # 상위 3개만. 새로운 것을 배우지
 
 ---
 
-## 명령어 (총 15개)
+## 명령어 (총 16개)
 
 | 명령 | 용도 |
 |------|------|
@@ -349,6 +362,7 @@ $paideia-weakmap                    # 상위 3개만. 새로운 것을 배우지
 | `$paideia-grade [--ocr=<engine>] [경로]` | `.course-meta`의 엔진 선택(Codex 내장 비전 / Qwen3-VL / Tesseract)으로 OCR 후 전략 채점, `errors/log.md`에 누적 기록 |
 | `$paideia-weakmap [개념]` | `weakmap/weakmap_<ts>.md`에 저장되는 우선순위 약점 리포트 |
 | `$paideia-cheatsheet [--pdf]` | 오류 주도 한 장짜리 치트시트 |
+| `$paideia-alt [붙여넣기]` | OPTIMETA Exam Radar(Alt 플러그인) 내보내기를 임포트 → `course-index/radar.md` + `coverage.md`의 강의 강조 열 + 골드존 weakmap |
 
 ---
 
@@ -476,7 +490,8 @@ PAIDEIA-codex/
         ├── paideia-chain/SKILL.md
         ├── paideia-mock/SKILL.md
         ├── paideia-weakmap/SKILL.md
-        └── paideia-cheatsheet/SKILL.md
+        ├── paideia-cheatsheet/SKILL.md
+        └── paideia-alt/SKILL.md
 ```
 
 ---
