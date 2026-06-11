@@ -36,6 +36,8 @@ Return 🔥🔥 Exam-primary and 🔥 Exam-likely sections, ranked by HW density
 
 Do **not** recommend `$paideia-derive` as a default — derivations are for reading gaps, not for drilling exam-likely zones.
 
+If there are no 🔥🔥 / 🔥 sections yet, say that directly and show the highest-ranked 🟡 section from "Recommended drill priority" as a fallback. Do not ask the user to choose a 🔥🔥 section that does not exist.
+
 ### If query is `all` or empty
 
 Render an exam-tier distribution table:
@@ -56,8 +58,10 @@ If the user insists on drilling a ⚪ section, warn once:
 
 ## Closing line
 
-Always end with:
-"🔥🔥 중에서 지금 당장 드릴 걸 1개만 고른다면? 시간 몇 분 남았어?"
+End with the line that matches the visible result:
+
+- If any 🔥🔥 / 🔥 section is listed: "🔥🔥 중에서 지금 당장 드릴 걸 1개만 고른다면? 시간 몇 분 남았어?"
+- If no 🔥🔥 / 🔥 section exists: "지금은 🔥🔥/🔥가 없으니 🟡 1개만 짧게 확인하자. 시간 몇 분 남았어?"
 
 Output goal: exam-point maximization. Steer time toward HW-dense zones.
 
