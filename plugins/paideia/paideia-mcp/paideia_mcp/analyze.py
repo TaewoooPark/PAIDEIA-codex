@@ -207,12 +207,40 @@ def _clean_heading(text: str) -> str:
 
     cleaned = text.strip().strip("#").strip()
     cleaned = re.sub(r"\[(.*?)\]\(.*?\)", r"\1", cleaned)
-    cleaned = re.sub(r"[`*_~]", "", cleaned)
+    cleaned = re.sub(r"[-_]+", " ", cleaned)
+    cleaned = re.sub(r"[`*~]", "", cleaned)
     cleaned = re.sub(r"\s+", " ", cleaned)
     return cleaned.strip()
 
 
-def _extract_headings(text: str) -> list[str]:
+def _title_from_stem(stem: str) -> str:
+    return re.sub(r"[-_]+", " ", stem).strip().title() or stem
+
+
+def _looks_like_auto_title(heading: str, stem: str) -> bool:
+    """True when a heading is just the generated ``# <file_stem>`` title."""
+
+    def norm(value: str) -> str:
+        return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+    return norm(heading) == norm(_title_from_stem(stem)) or norm(heading) == norm(stem)
+
+
+def _dedupe_headings(headings: list[str]) -> list[str]:
+    """Preserve heading order while removing case-insensitive duplicates."""
+
+    seen: set[str] = set()
+    out: list[str] = []
+    for heading in headings:
+        key = heading.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(heading)
+    return out
+
+
+def _extract_markdown_headings(text: str) -> list[str]:
     """Return cleaned markdown headings, in file order."""
 
     headings: list[str] = []
@@ -226,8 +254,39 @@ def _extract_headings(text: str) -> list[str]:
     return headings
 
 
-def _title_from_stem(stem: str) -> str:
-    return re.sub(r"[-_]+", " ", stem).strip().title() or stem
+def _extract_plaintext_headings(text: str) -> list[str]:
+    """Promote common OCR/plain-text title lines into section candidates."""
+
+    patterns = (
+        re.compile(r"^(Lecture\s+\d+(?:\.\d+)?(?:\s*[-:.)]\s*|\s+).+)$", re.I),
+        re.compile(r"^(Ch(?:apter)?\.?\s+\d+(?:\.\d+)?(?:\s*[-:.)]\s*|\s+).+)$", re.I),
+        re.compile(r"^(Section\s+\d+(?:\.\d+)*(?:\s*[-:.)]\s*|\s+).+)$", re.I),
+        re.compile(r"^(§\s*\d+(?:\.\d+)*(?:\s*[-:.)]\s*|\s+).+)$", re.I),
+        re.compile(r"^(Homework\s+\d+(?:\s*[-:.)]\s*|\s+).+)$", re.I),
+    )
+    headings: list[str] = []
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("<!--") or line.startswith("#"):
+            continue
+        if line == "---" or len(line) > 140:
+            continue
+        if any(pattern.match(line) for pattern in patterns):
+            headings.append(_clean_heading(line))
+    return _dedupe_headings(headings)
+
+
+def _extract_headings(text: str, stem: str) -> list[str]:
+    """Return semantic headings from markdown plus OCR/plain-text title lines."""
+
+    markdown = _extract_markdown_headings(text)
+    plaintext = _extract_plaintext_headings(text)
+    semantic_markdown = [
+        heading for heading in markdown if not _looks_like_auto_title(heading, stem)
+    ]
+    if plaintext:
+        return _dedupe_headings(semantic_markdown + plaintext)
+    return markdown
 
 
 def _tokenize(text: str) -> set[str]:
@@ -242,6 +301,7 @@ def _extract_label_and_title(heading: str, index: int) -> tuple[str, str]:
         re.compile(r"^(§\s*\d+(?:\.\d+)*)\s*[-:.)]?\s*(.*)$", re.I),
         re.compile(r"^(Ch(?:apter)?\.?\s*\d+(?:\.\d+)*)\s*[-:.)]?\s*(.*)$", re.I),
         re.compile(r"^(Lecture\s*\d+)\s*[-:.)]?\s*(.*)$", re.I),
+        re.compile(r"^(Section\s*\d+(?:\.\d+)*)\s*[-:.)]?\s*(.*)$", re.I),
         re.compile(r"^(\d+(?:\.\d+)*)\s+(.+)$"),
     )
     for pattern in patterns:
@@ -250,6 +310,9 @@ def _extract_label_and_title(heading: str, index: int) -> tuple[str, str]:
             continue
         label = match.group(1)
         if pattern is patterns[3]:
+            number = re.search(r"\d+(?:\.\d+)*", label)
+            label = f"§{number.group(0)}" if number else label
+        elif pattern is patterns[4]:
             label = f"§{label}"
         title = match.group(2).strip() or heading.strip()
         return label, title
@@ -267,7 +330,7 @@ def _load_docs(root: Path) -> tuple[dict[str, list[str]], dict[str, int], list[C
         for rel in inventory[category]:
             path = converted / rel
             text = _read_text(path)
-            headings = _extract_headings(text)
+            headings = _extract_headings(text, path.stem)
             tokens = _tokenize("\n".join(headings) + "\n" + text)
             docs.append(
                 ConvertedDoc(
@@ -285,12 +348,19 @@ def _load_docs(root: Path) -> tuple[dict[str, list[str]], dict[str, int], list[C
 def _build_sections(docs: list[ConvertedDoc]) -> list[Section]:
     """Infer a topic list from lecture/textbook headings, then other sources."""
 
-    ordered_docs = [
+    primary_docs = [
         doc
-        for category in ("lectures", "textbook", "solutions", "homework")
+        for category in ("lectures", "textbook")
         for doc in docs
         if doc.category == category
     ]
+    fallback_docs = [
+        doc
+        for category in ("solutions", "homework")
+        for doc in docs
+        if doc.category == category
+    ]
+    ordered_docs = primary_docs or fallback_docs
     sections: list[Section] = []
     seen: set[tuple[str, str]] = set()
     next_index = 1

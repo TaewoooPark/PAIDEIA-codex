@@ -62,3 +62,46 @@ def test_build_course_index_respects_existing_files_without_force(tmp_path: Path
     third = build_course_index(project_root=str(tmp_path), force=True)
     assert third["wrote_index"] is True
     assert "manual summary" not in summary_path.read_text(encoding="utf-8")
+
+
+def test_build_course_index_promotes_ocr_plaintext_headings(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "converted" / "lectures" / "lecture_residues.md",
+        "\n".join(
+            [
+                "<!-- source: materials/lectures/lecture_residues.pdf -->",
+                "<!-- engine: tesseract -->",
+                "",
+                "# lecture_residues",
+                "",
+                "Lecture 1: Residues and Laurent Series",
+                "Section 1.1 Singularities and Laurent series",
+                "Section 1.2 Residue theorem",
+                "Integral over closed contour C of f(z) dz = 2 pi i sum residues.",
+            ]
+        ),
+    )
+    _write(
+        tmp_path / "converted" / "textbook" / "chapter_residue_basics.md",
+        "# chapter_residue_basics\n\nChapter 1 Residue Calculus\n",
+    )
+    _write(
+        tmp_path / "converted" / "solutions" / "hw1_solutions.md",
+        "# hw1_solutions\n\nSolution HW1-P1. Compute residues at the poles.\n",
+    )
+    _write(
+        tmp_path / "converted" / "homework" / "hw1.md",
+        "# hw1\n\nHomework 1\nProblem HW1-P1. Residue theorem practice.\n",
+    )
+
+    result = build_course_index(project_root=str(tmp_path), weak_zones="residue")
+
+    assert result["ready"] is True
+    summary = (tmp_path / "course-index" / "summary.md").read_text(encoding="utf-8")
+    coverage = (tmp_path / "course-index" / "coverage.md").read_text(encoding="utf-8")
+    assert "Lecture 1. Residues and Laurent Series" in summary
+    assert "§1.2. Residue theorem" in summary
+    assert "lectureresidues" not in summary
+    assert "`converted/homework/hw1.md`" in coverage
+    assert "| §1.2 | Residue theorem * | 1 |" in coverage
+    assert "hw1 solutions" not in summary.lower()
