@@ -29,6 +29,10 @@ def test_detect_phase_diag(tmp_path: Path) -> None:
 def test_detect_phase_drill(tmp_path: Path) -> None:
     _write(tmp_path / "course-index" / "patterns.md", "# patterns")
     _write(tmp_path / "quizzes" / "q1.md", "# quiz")
+    _write(
+        tmp_path / "errors" / "log.md",
+        "- problem_id: q1\n  pattern: P1\n  source: answers/converted/q1.md\n",
+    )
     assert phase.detect_phase(tmp_path, None) == "drill"
 
 
@@ -36,6 +40,10 @@ def test_detect_phase_mock_takes_priority_over_drill(tmp_path: Path) -> None:
     _write(tmp_path / "course-index" / "patterns.md", "# patterns")
     _write(tmp_path / "quizzes" / "q1.md", "# quiz")
     _write(tmp_path / "mock" / "mock_90.md", "# mock")
+    _write(
+        tmp_path / "errors" / "log.md",
+        "- problem_id: mock-1\n  pattern: P2\n  source: mock/mock_90.md\n",
+    )
     assert phase.detect_phase(tmp_path, None) == "mock"
 
 
