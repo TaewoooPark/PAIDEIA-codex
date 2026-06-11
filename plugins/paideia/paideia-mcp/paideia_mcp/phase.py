@@ -19,6 +19,7 @@ from pathlib import Path
 
 _PATTERN_ENTRY_RX = re.compile(r"^\s*pattern:\s*P\d+", re.MULTILINE)
 _SOURCE_RX = re.compile(r"^\s*source:\s*(.+?)\s*$", re.MULTILINE)
+_HTML_COMMENT_RX = re.compile(r"<!--.*?-->", re.DOTALL)
 
 
 def parse_meta(cwd: Path) -> dict[str, str]:
@@ -68,12 +69,8 @@ def days_until(exam_date: str) -> int | None:
 def _has_error_entries(cwd: Path) -> bool:
     """True if ``errors/log.md`` has at least one graded ``pattern: P<k>`` entry."""
 
-    log = cwd / "errors" / "log.md"
-    if not log.exists():
-        return False
-    try:
-        text = log.read_text(encoding="utf-8", errors="replace")
-    except OSError:
+    text = _read_error_log(cwd)
+    if text is None:
         return False
     return bool(_PATTERN_ENTRY_RX.search(text))
 
@@ -81,18 +78,27 @@ def _has_error_entries(cwd: Path) -> bool:
 def _mock_was_graded(cwd: Path) -> bool:
     """True if any ``errors/log.md`` entry's ``source:`` points to a mock."""
 
-    log = cwd / "errors" / "log.md"
-    if not log.exists():
-        return False
-    try:
-        text = log.read_text(encoding="utf-8", errors="replace")
-    except OSError:
+    text = _read_error_log(cwd)
+    if text is None:
         return False
     for match in _SOURCE_RX.finditer(text):
         source = match.group(1).lower()
         if "mock" in source:
             return True
     return False
+
+
+def _read_error_log(cwd: Path) -> str | None:
+    """Read ``errors/log.md`` while ignoring the seeded schema comment."""
+
+    log = cwd / "errors" / "log.md"
+    if not log.exists():
+        return None
+    try:
+        text = log.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    return _HTML_COMMENT_RX.sub("", text)
 
 
 def detect_phase(cwd: Path, days: int | None) -> str:
@@ -149,9 +155,8 @@ def top_miss(cwd: Path) -> str | None:
             pass
     log = cwd / "errors" / "log.md"
     if log.exists():
-        try:
-            text = log.read_text(encoding="utf-8", errors="replace")
-        except OSError:
+        text = _read_error_log(cwd)
+        if text is None:
             return None
         counts: dict[str, int] = {}
         for match in re.finditer(r"pattern:\s*(P\d+)", text):

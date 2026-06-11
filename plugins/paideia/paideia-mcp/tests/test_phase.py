@@ -26,6 +26,24 @@ def test_detect_phase_diag(tmp_path: Path) -> None:
     assert phase.detect_phase(tmp_path, None) == "diag"
 
 
+def test_seeded_error_log_schema_comment_does_not_advance_phase(tmp_path: Path) -> None:
+    _write(tmp_path / "course-index" / "patterns.md", "# patterns")
+    _write(
+        tmp_path / "errors" / "log.md",
+        """# Error log
+
+<!-- Append-only YAML entries:
+- problem_id: <id>
+  pattern: P9
+  source: mock/<ts>.md
+-->
+""",
+    )
+
+    assert phase.detect_phase(tmp_path, None) == "diag"
+    assert phase.top_miss(tmp_path) is None
+
+
 def test_detect_phase_drill(tmp_path: Path) -> None:
     _write(tmp_path / "course-index" / "patterns.md", "# patterns")
     _write(tmp_path / "quizzes" / "q1.md", "# quiz")
