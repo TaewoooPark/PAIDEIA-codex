@@ -211,28 +211,28 @@ If Codex asks for approval in either case, click **Approve** so the plugin can r
 The desktop app is the smoothest reading surface for Paideia — `summary.md`, `patterns.md`, `coverage.md`, and your `derivations/*.md` notes render inline as the agent emits them (see the screenshot grid above), so there's no separate reader to keep open.
 
 1. Download the **Codex desktop app** for your OS (macOS / Windows / Linux) and sign in with your ChatGPT Plus / Pro / Business / Edu / Enterprise account. See [developers.openai.com/codex](https://developers.openai.com/codex) for the current install link.
-2. Open any new conversation and run each line as its own command:
+2. In a terminal, add the marketplace and install the plugin:
 
-   ```
-   /plugins marketplace add https://github.com/OPTIMETA/PAIDEIA-codex.git
-   ```
-
-   ```
-   /plugins install paideia@paideia-marketplace
+   ```bash
+   codex plugin marketplace add https://github.com/OPTIMETA/PAIDEIA-codex.git
    ```
 
-3. The 16 `$paideia-` verbs are now available in every conversation, and the bundled `paideia-mcp` stdio server auto-launches when you enter a course folder. Continue to **Per-course bootstrap** below.
+   ```bash
+   codex plugin add paideia@paideia-marketplace
+   ```
+
+3. Open a fresh Codex desktop conversation. The 16 `$paideia-` verbs are now available, and the bundled `paideia-mcp` stdio server auto-launches when you enter a course folder. Continue to **Per-course bootstrap** below.
 
 ### Install via the Codex CLI
 
-If you prefer the terminal, install [Codex CLI](https://github.com/openai/codex) (`codex` on `PATH`) first, then run the same two commands inside `codex`, each as a separate line:
+If you prefer the terminal, install [Codex CLI](https://github.com/openai/codex) (`codex` on `PATH`) first, then run:
 
-```
-/plugins marketplace add https://github.com/OPTIMETA/PAIDEIA-codex.git
+```bash
+codex plugin marketplace add https://github.com/OPTIMETA/PAIDEIA-codex.git
 ```
 
-```
-/plugins install paideia@paideia-marketplace
+```bash
+codex plugin add paideia@paideia-marketplace
 ```
 
 > The full `https://...` URL is deliberate — `owner/repo` shorthand can make the CLI try SSH first, which fails if you don't have a GitHub SSH key registered. HTTPS always works.
