@@ -45,11 +45,13 @@ Map the argument to a specific set of sections and patterns via `coverage.md` an
 - Problems → `quizzes/<topic>_<ts>.md`
 - Answers → `quizzes/<topic>_<ts>_answers.md` (do not display).
 - Each problem cites the § and pattern being tested **at the end** of the problem (not in the title — no spoilers).
+- The `_answers.md` file is genuinely hidden from the chat/terminal transcript: do **not** create it with `apply_patch`, `git diff`, `tee`, `cat <<EOF`, or any command/tool path that echoes the answer body back to the user. Use a quiet file-write path available in the environment, then verify only with filenames, file sizes, or line counts. Never run `sed`, `cat`, `rg`, or `git diff` on the answer file in the visible transcript.
 
 ### 4. Print to chat
 
 - Filename of the quiz.
 - All N problem statements, numbered.
+- Mention only that the hidden answer sibling was written; do not link or print its contents.
 - Closing: "종이로 풀고, 스캔해서 `answers/<topic>_<ts>.pdf`에 올린 뒤 `$paideia-grade`"
 
 ### 5. Do NOT accept typed answers
