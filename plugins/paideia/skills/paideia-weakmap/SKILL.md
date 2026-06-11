@@ -14,6 +14,7 @@ The user says "나 이 포인트 약한 것 같아" and can immediately patch th
 - Top-of-file title: `# Weakmap — <YYYY-MM-DD HH:mm>`
 - **Never overwrite.** Always save a new timestamped file (append-only history).
 - "Latest report" = file with the most recent mtime under `weakmap/`.
+- Write the report without echoing the full body through `apply_patch`, `git diff`, or other visible diff output. After saving, verify only with path, line count, and the Top 5 / verdict snippets needed for chat.
 
 ## Prerequisites
 

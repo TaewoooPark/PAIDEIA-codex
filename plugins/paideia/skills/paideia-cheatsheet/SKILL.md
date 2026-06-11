@@ -50,6 +50,7 @@ You may call MCP tool `paideia-mcp.course_phase()` to surface the current phase 
    ```
 
 3. **Write to** `cheatsheet/final.md`.
+   - Write the file without echoing the full cheatsheet body through `apply_patch`, `git diff`, or other visible diff output. Verify with path, word count, and a compact section inventory only.
 
 4. **If `--pdf` in arguments:** render `cheatsheet/final.pdf`.
    - Use `reportlab` with 2-column layout, 9pt font, minimal margins.
