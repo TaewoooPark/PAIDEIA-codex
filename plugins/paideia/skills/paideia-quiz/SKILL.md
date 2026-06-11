@@ -45,7 +45,8 @@ Map the argument to a specific set of sections and patterns via `coverage.md` an
 - Problems → `quizzes/<topic>_<ts>.md`
 - Answers → `quizzes/<topic>_<ts>_answers.md` (do not display).
 - Each problem cites the § and pattern being tested **at the end** of the problem (not in the title — no spoilers).
-- The `_answers.md` file is genuinely hidden from the chat/terminal transcript: do **not** create it with `apply_patch`, `git diff`, `tee`, `cat <<EOF`, or any command/tool path that echoes the answer body back to the user. Use a quiet file-write path available in the environment, then verify only with filenames, file sizes, or line counts. Never run `sed`, `cat`, `rg`, or `git diff` on the answer file in the visible transcript.
+- The `_answers.md` file is genuinely hidden from the chat/terminal transcript: do **not** create it with `apply_patch`, `git diff`, `tee`, `cat <<EOF`, `python <<EOF`, or any command/tool path that echoes the answer body back to the user or includes the answer body in visible tool input. Use a non-echoing file-write mechanism available in the environment, then verify only with filenames, file sizes, or line counts. Never run `sed`, `cat`, `rg`, or `git diff` on the answer file in the visible transcript.
+- If no non-echoing write path is available, write the problem file only and stop with: "숨김 답안을 transcript에 노출하지 않고 쓸 방법이 없어 `_answers.md` 생성을 중단했어." Do not degrade into a visible here-doc or patch.
 
 ### 4. Print to chat
 
